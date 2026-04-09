@@ -5,10 +5,10 @@
     "version": "1.3.0"
   },
   "build": {
-    "beforeDevCommand": "npm run dev -- --host",
+    "beforeDevCommand": "pnpm --filter hrttracker dev -- --host",
     "devPath": "http://localhost:5173",
-    "beforeBuildCommand": "npm run build",
-    "distDir": "../dist"
+    "beforeBuildCommand": "pnpm --filter hrttracker build",
+    "distDir": "../apps/hrttracker/dist"
   },
   "tauri": {
     "windows": [

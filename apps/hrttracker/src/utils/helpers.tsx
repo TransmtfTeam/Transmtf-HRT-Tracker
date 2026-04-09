@@ -1,6 +1,6 @@
 import React from 'react';
 import { Syringe, Pill, Droplet, Sticker, X } from 'lucide-react';
-import { Route, DoseEvent, Ester, getBioavailabilityMultiplier, getToE2Factor, ExtraKey } from '../../logic';
+import { Route, getRouteIcon as getRouteIconCore, getBioDoseMG, getRawDoseMG } from '../../logic';
 import { Lang } from '../i18n/translations';
 
 export const formatDate = (date: Date, lang: Lang) => {
@@ -23,15 +23,4 @@ export const getRouteIcon = (route: Route) => {
     }
 };
 
-export const getBioDoseMG = (event: DoseEvent) => {
-    const multiplier = getBioavailabilityMultiplier(event.route, event.ester, event.extras || {});
-    return multiplier * event.doseMG;
-};
-
-export const getRawDoseMG = (event: DoseEvent) => {
-    if (event.route === Route.patchRemove) return null;
-    if (event.extras[ExtraKey.releaseRateUGPerDay]) return null;
-    const factor = getToE2Factor(event.ester);
-    if (!factor) return event.doseMG;
-    return event.doseMG / factor;
-};
+export { getBioDoseMG, getRawDoseMG };

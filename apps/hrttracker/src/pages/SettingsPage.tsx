@@ -18,8 +18,7 @@ import {
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
-import { DoseEvent, LabResult, encryptData, decryptData } from '../../logic';
-import { computeDataHash } from '../utils/dataHash';
+import { DoseEvent, LabResult, encryptData, decryptData, computeDataHash } from '../../logic';
 import { APP_VERSION } from '../constants';
 import CustomSelect from '../components/CustomSelect';
 import ImportModal from '../components/ImportModal';
@@ -30,13 +29,13 @@ import ModelInfoModal from '../components/ModelInfoModal';
 import DisclaimerModal from '../components/DisclaimerModal';
 import StatisticsModal from '../components/StatisticsModal';
 import type { Lang } from '../i18n/translations';
-import flagCN from '../flag_svg/🇨🇳.svg';
-import flagTW from '../flag_svg/🇹🇼.svg';
-import flagHK from '../flag_svg/🇭🇰.svg';
-import flagUS from '../flag_svg/🇺🇸.svg';
-import flagJP from '../flag_svg/🇯🇵.svg';
-import flagRU from '../flag_svg/🇷🇺.svg';
-import flagUA from '../flag_svg/🇺🇦.svg';
+import flagCN from '../assets/flags/cn.svg';
+import flagTW from '../assets/flags/tw.svg';
+import flagHK from '../assets/flags/hk.svg';
+import flagUS from '../assets/flags/us.svg';
+import flagJP from '../assets/flags/jp.svg';
+import flagRU from '../assets/flags/ru.svg';
+import flagUA from '../assets/flags/ua.svg';
 
 type JsonRecord = Record<string, unknown>;
 

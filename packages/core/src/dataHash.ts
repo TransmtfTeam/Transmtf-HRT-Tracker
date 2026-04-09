@@ -1,4 +1,4 @@
-type HashableData = {
+export type HashableData = {
     events: unknown[];
     weight: number;
     labResults: unknown[];

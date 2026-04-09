@@ -13,7 +13,7 @@ dist-ssr
 src-tauri/target
 src-tauri/target/release
 *.local
-
+.pnpm-store
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -31,3 +31,5 @@ src-tauri/target/release
 .env
 .env.*
 !.env.example
+.turbo
+.wrangler

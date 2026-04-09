@@ -1,4 +1,4 @@
-import { Route, Ester, type DoseEvent, type LabResult, type SimulationResult } from './types';
+import { Route, Ester, type DoseEvent, type LabResult, type SimulationResult } from './types.js';
 import {
     CorePK,
     CPA_2COMP_PK,
@@ -6,12 +6,12 @@ import {
     compute2CompCPACentralAmount,
     _analytic3C,
     oneCompAmount,
-} from './pk';
+} from './pk.js';
 import {
     convertToPgMl,
     buildOUKalmanCalibration,
     type CalibrationModel,
-} from './calibration';
+} from './calibration.js';
 
 export interface ResidualAnchor {
     timeH: number;

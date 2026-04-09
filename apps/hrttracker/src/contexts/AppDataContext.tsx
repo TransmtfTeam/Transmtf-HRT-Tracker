@@ -6,7 +6,7 @@ import {
     replayPersonalModel, computeSimulationWithCI, initPersonalModel,
     ekfUpdatePersonalModel,
 } from '../../logic';
-import { computeDataHash } from '../utils/dataHash';
+import { computeDataHash } from '../../logic';
 
 const PERSONAL_MODEL_KEY = 'hrt-personal-model';
 const APPLY_E2_LEARNING_TO_CPA_KEY = 'hrt-apply-e2-learning-to-cpa';

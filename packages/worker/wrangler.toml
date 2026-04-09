@@ -1,5 +1,5 @@
 name = "hrt-tracker-cloud"
-main = "worker.ts"
+main = "index.ts"
 compatibility_date = "2025-12-04"
 
 [assets]

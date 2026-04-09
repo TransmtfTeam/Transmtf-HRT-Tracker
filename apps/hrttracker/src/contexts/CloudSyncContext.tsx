@@ -2,8 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import apiClient from '../api/client';
 import { useAuth } from './AuthContext';
 import { useSecurityPassword } from './SecurityPasswordContext';
-import { computeDataHash } from '../utils/dataHash';
-import { isLogoutInProgress } from '../utils/authSessionState';
+import { computeDataHash, isLogoutInProgress } from '../../logic';
 
 interface CloudSyncContextType {
   isSyncing: boolean;

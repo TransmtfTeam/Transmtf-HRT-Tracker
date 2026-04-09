@@ -1,5 +1,5 @@
-import { type LabResult, type SimulationResult } from './types';
-import { interpolateConcentration_E2 } from './pk';
+import { type LabResult, type SimulationResult } from './types.js';
+import { interpolateConcentration_E2 } from './pk.js';
 
 /**
  * Convert a lab value into pg/mL, which is the internal unit used by the
