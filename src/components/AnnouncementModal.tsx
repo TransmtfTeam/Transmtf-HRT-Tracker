@@ -1,8 +1,63 @@
 import React, { useEffect, useState } from 'react';
 import { X, Megaphone } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 const ANNOUNCEMENT_URL = 'https://www.transmtf.com/api/announcement/tmtf_b243d43f97b51b4fef747016';
 const STORAGE_KEY = 'tmtf_announcement_hash';
+const ANNOUNCEMENT_ALLOWED_TAGS = [
+  'p', 'br', 'strong', 'em', 'b', 'i', 'u',
+  'ul', 'ol', 'li',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  'span', 'div',
+  'a', 'blockquote', 'code', 'pre', 'hr', 'img'
+];
+const ANNOUNCEMENT_ALLOWED_ATTR = [
+  'href', 'title', 'target', 'rel', 'src', 'alt',
+  'colspan', 'rowspan', 'scope'
+];
+const ANNOUNCEMENT_SAFE_REL_TOKENS = ['noopener', 'noreferrer'] as const;
+const ANNOUNCEMENT_SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ANNOUNCEMENT_ALLOWED_TAGS,
+  ALLOWED_ATTR: ANNOUNCEMENT_ALLOWED_ATTR,
+  ALLOW_DATA_ATTR: false,
+  FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math'],
+  FORBID_ATTR: ['style'],
+  ALLOWED_URI_REGEXP: /^(?:https:|mailto:|tel:|\/(?!\/))/i,
+};
+
+function enforceSafeLinkTargets(html: string): string {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  template.content.querySelectorAll('a[target]').forEach((anchor) => {
+    const target = anchor.getAttribute('target');
+    if (target == null) return;
+
+    const normalizedTarget = target.trim().toLowerCase();
+    if (normalizedTarget !== '_blank') {
+      anchor.removeAttribute('target');
+      return;
+    }
+
+    anchor.setAttribute('target', '_blank');
+    const relTokens = new Set(
+      (anchor.getAttribute('rel') ?? '')
+        .split(/\s+/)
+        .map(token => token.trim().toLowerCase())
+        .filter(Boolean)
+    );
+    ANNOUNCEMENT_SAFE_REL_TOKENS.forEach(token => relTokens.add(token));
+    anchor.setAttribute('rel', Array.from(relTokens).join(' '));
+  });
+
+  return template.innerHTML;
+}
+
+function sanitizeAnnouncementHtml(html: string): string {
+  const sanitized = DOMPurify.sanitize(html, ANNOUNCEMENT_SANITIZE_CONFIG);
+  return enforceSafeLinkTargets(sanitized);
+}
 
 async function hashContent(content: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
@@ -23,12 +78,25 @@ const AnnouncementModal: React.FC = () => {
         const text = (await res.text()).trim();
         if (!text) return;
 
-        const hash = await hashContent(text);
-        if (hash !== localStorage.getItem(STORAGE_KEY)) {
-          localStorage.setItem(STORAGE_KEY, hash);
-          setContent(text);
-          setVisible(true);
+        const sanitized = sanitizeAnnouncementHtml(text).trim();
+        if (!sanitized) return;
+
+        const currentHash = await hashContent(sanitized);
+        const storedHash = localStorage.getItem(STORAGE_KEY);
+
+        // Backward compatibility: older versions stored hash of raw content.
+        if (storedHash === currentHash) return;
+        if (storedHash) {
+          const legacyHash = await hashContent(text);
+          if (storedHash === legacyHash) {
+            localStorage.setItem(STORAGE_KEY, currentHash);
+            return;
+          }
         }
+
+        localStorage.setItem(STORAGE_KEY, currentHash);
+        setContent(sanitized);
+        setVisible(true);
       } catch {
         // 公告是非关键功能，静默失败
       }
