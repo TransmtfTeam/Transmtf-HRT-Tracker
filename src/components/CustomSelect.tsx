@@ -6,9 +6,10 @@ interface CustomSelectProps {
     onChange: (val: string) => void;
     options: { value: string; label: string; icon?: React.ReactNode }[];
     label?: string;
+    compactOnMobile?: boolean;
 }
 
-const CustomSelect = ({ value, onChange, options, label }: CustomSelectProps) => {
+const CustomSelect = ({ value, onChange, options, label, compactOnMobile = false }: CustomSelectProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [focusedIndex, setFocusedIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -103,9 +104,9 @@ const CustomSelect = ({ value, onChange, options, label }: CustomSelectProps) =>
     };
 
     return (
-        <div className="space-y-2" ref={containerRef}>
+        <div className={`min-w-0 ${compactOnMobile ? 'space-y-1 sm:space-y-2' : 'space-y-2'}`} ref={containerRef}>
             {label && (
-                <label id={labelId} className="block text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>
+                <label id={labelId} className={`block font-bold ${compactOnMobile ? 'text-xs sm:text-sm' : 'text-sm'}`} style={{ color: 'var(--text-secondary)' }}>
                     {label}
                 </label>
             )}
@@ -120,15 +121,21 @@ const CustomSelect = ({ value, onChange, options, label }: CustomSelectProps) =>
                     aria-labelledby={labelId}
                     onClick={() => isOpen ? closeList() : openList()}
                     onKeyDown={handleButtonKeyDown}
-                    className="w-full p-4 rounded-xl outline-none flex items-center justify-between transition-all glass-input"
+                    className={`w-full min-w-0 rounded-xl outline-none flex items-center justify-between transition-all glass-input ${compactOnMobile ? 'p-3 sm:p-4' : 'p-4'}`}
                     onFocus={e => e.currentTarget.style.boxShadow = '0 0 0 2px var(--glass-input-focus-ring)'}
                     onBlur={e => e.currentTarget.style.boxShadow = 'none'}
                 >
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                         {selectedOption?.icon}
-                        <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{selectedOption?.label || value}</span>
+                        <span
+                            className="min-w-0 truncate font-medium"
+                            title={selectedOption?.label || value}
+                            style={{ color: 'var(--text-primary)' }}
+                        >
+                            {selectedOption?.label || value}
+                        </span>
                     </div>
-                    <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-tertiary)' }} />
+                    <ChevronDown size={20} className={`ml-2 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-tertiary)' }} />
                 </button>
 
                 {isOpen && (
@@ -157,8 +164,8 @@ const CustomSelect = ({ value, onChange, options, label }: CustomSelectProps) =>
                                 }}
                             >
                                 {opt.icon}
-                                <span>{opt.label}</span>
-                                {opt.value === value && <div className="ml-auto w-2 h-2 rounded-full" style={{ background: 'var(--accent-400)' }} aria-hidden="true" />}
+                                <span className="min-w-0 break-words">{opt.label}</span>
+                                {opt.value === value && <div className="ml-auto h-2 w-2 shrink-0 rounded-full" style={{ background: 'var(--accent-400)' }} aria-hidden="true" />}
                             </div>
                         ))}
                     </div>
