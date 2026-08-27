@@ -5,11 +5,12 @@ import { DoseEvent } from '../../logic';
 import OverviewView from '../views/OverviewView';
 
 interface OutletContext {
+    onAddEvent: () => void;
     onEditEvent: (event: DoseEvent) => void;
 }
 
 const OverviewPage: React.FC = () => {
-    const { onEditEvent } = useOutletContext<OutletContext>();
+    const { onAddEvent, onEditEvent } = useOutletContext<OutletContext>();
     const { events, labResults, simulation, currentTime, simCI, baselineE2PGmL } = useAppData();
 
     return (
@@ -20,6 +21,7 @@ const OverviewPage: React.FC = () => {
             currentTime={currentTime}
             simCI={simCI}
             baselineE2PGmL={baselineE2PGmL}
+            onAddEvent={onAddEvent}
             onEditEvent={onEditEvent}
         />
     );
