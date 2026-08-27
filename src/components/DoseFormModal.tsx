@@ -677,45 +677,49 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                 aria-labelledby="dose-modal-title"
                 className="relative rounded-3xl w-full max-w-lg md:max-w-2xl h-[90vh] md:max-h-[85vh] flex flex-col overflow-hidden modal-spring-glass glass-modal"
             >
-                <div className="p-6 md:p-8 border-b flex justify-between items-center shrink-0"
+                <div className="px-3 py-2 sm:p-6 md:p-8 border-b flex justify-between items-center shrink-0"
                     style={{ borderColor: 'var(--border-secondary)', background: 'var(--bg-card-hover)' }}>
-                    <h3 id="dose-modal-title" className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <h3 id="dose-modal-title" className="text-base sm:text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
                         {eventToEdit ? t('modal.dose.edit_title') : t('modal.dose.add_title')}
                     </h3>
-                    <button onClick={onClose} aria-label={t('btn.close')} className="p-2 rounded-full transition"
+                    <button onClick={onClose} aria-label={t('btn.close')} className="relative p-1.5 sm:p-2 rounded-full transition after:absolute after:-inset-2 after:content-['']"
                         style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)' }}>
-                        <X size={20} />
+                        <X size={18} className="sm:h-5 sm:w-5" />
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                    {/* Time */}
-                    <div className="space-y-2">
-                        <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('field.time')}</label>
-                        <div className="flex items-center gap-3">
-                            <input
-                                ref={dateInputRef}
-                                type="datetime-local"
-                                value={dateStr}
-                                onChange={e => setDateStr(e.target.value)}
-                                className="text-xl font-bold font-mono bg-transparent border-none p-0 focus:ring-0 focus:outline-none"
-                                style={{ color: 'var(--text-primary)' }}
-                            />
-                            <button
-                                onClick={() => dateInputRef.current?.focus()}
-                                aria-label={t('field.time')}
-                                className="p-2 rounded-lg transition-colors"
-                                style={{ background: 'var(--bg-card-hover)', color: 'var(--text-secondary)' }}
-                            >
-                                <Calendar size={18} />
-                            </button>
+                <div className="p-4 sm:p-6 space-y-3 sm:space-y-6 flex-1 overflow-y-auto">
+                    {/* Basic information flows by each field's intrinsic width. */}
+                    <div className="flex flex-wrap items-start gap-x-4 gap-y-3 sm:gap-y-6">
+                        {/* Time */}
+                        <div className="max-w-full flex-none space-y-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('field.time')}</label>
+                            <div className="flex max-w-full items-center gap-2">
+                                <input
+                                    ref={dateInputRef}
+                                    type="datetime-local"
+                                    value={dateStr}
+                                    onChange={e => setDateStr(e.target.value)}
+                                    className="min-w-0 max-w-full bg-transparent p-0 font-mono text-lg font-bold focus:outline-none focus:ring-0"
+                                    style={{ color: 'var(--text-primary)', border: 'none' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => dateInputRef.current?.focus()}
+                                    aria-label={t('field.time')}
+                                    className="shrink-0 rounded-lg p-2 transition-colors"
+                                    style={{ background: 'var(--bg-card-hover)', color: 'var(--text-secondary)' }}
+                                >
+                                    <Calendar size={18} />
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Body weight */}
-                    <div className="space-y-2">
-                        <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('field.weight')}</label>
-                        <div className="flex items-center gap-2">
+                        {/* Body weight */}
+                        <div className="min-w-[120px] flex-[1_1_120px] space-y-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                                {t('field.weight')} <span className="normal-case">({t('field.weight_unit')})</span>
+                            </label>
                             <input
                                 type="number"
                                 inputMode="decimal"
@@ -724,25 +728,40 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                                 step="0.1"
                                 value={weightStr}
                                 onChange={e => setWeightStr(e.target.value)}
-                                className="flex-1 p-3 rounded-xl text-base font-bold font-mono outline-none focus:ring-2 focus:ring-[var(--accent-300)]"
+                                className="w-full min-w-0 rounded-xl p-3 font-mono text-base font-bold outline-none focus:ring-2 focus:ring-[var(--accent-300)]"
                                 style={{ background: 'var(--bg-card-hover)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }}
                                 placeholder="70"
                             />
-                            <span className="text-sm font-bold" style={{ color: 'var(--text-tertiary)' }}>{t('field.weight_unit')}</span>
                         </div>
                     </div>
 
-                    {/* Route */}
-                    <CustomSelect
-                        label={t('field.route')}
-                        value={route}
-                        onChange={(val) => setRoute(val as Route)}
-                        options={ROUTE_DISPLAY_ORDER.map(r => ({
-                            value: r,
-                            label: t(`route.${r}`),
-                            icon: getRouteIcon(r)
-                        }))}
-                    />
+                    {/* Medication information. A single available compound leaves no empty column. */}
+                    <div className={`grid min-w-0 grid-cols-1 gap-3 sm:gap-6 md:gap-4 ${availableEsters.length > 1 ? 'md:grid-cols-2' : ''}`}>
+                        <CustomSelect
+                            compactOnMobile
+                            label={t('field.route')}
+                            value={route}
+                            onChange={(val) => setRoute(val as Route)}
+                            options={ROUTE_DISPLAY_ORDER.map(r => ({
+                                value: r,
+                                label: t(`route.${r}`),
+                                icon: getRouteIcon(r)
+                            }))}
+                        />
+
+                        {route !== Route.patchRemove && availableEsters.length > 1 && (
+                            <CustomSelect
+                                compactOnMobile
+                                label={t('field.ester')}
+                                value={ester}
+                                onChange={(val) => setEster(val as Ester)}
+                                options={availableEsters.map(e => ({
+                                    value: e,
+                                    label: t(`ester.${e}`),
+                                }))}
+                            />
+                        )}
+                    </div>
 
                     {route === Route.patchRemove && (
                         <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40 p-3 rounded-xl">
@@ -752,19 +771,6 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
 
                     {route !== Route.patchRemove && (
                         <>
-                            {/* Ester Selection */}
-                            {availableEsters.length > 1 && (
-                                <CustomSelect
-                                    label={t('field.ester')}
-                                    value={ester}
-                                    onChange={(val) => setEster(val as Ester)}
-                                    options={availableEsters.map(e => ({
-                                        value: e,
-                                        label: t(`ester.${e}`),
-                                    }))}
-                                />
-                            )}
-
                             {/* Estradiol undecylate is easily confused with valerate and rests on
                                 sparse public PK; surface that caveat at selection time. */}
                             {route === Route.injection && ester === Ester.EU && (
@@ -778,6 +784,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                                 <div className="mb-4 space-y-3">
                                     {/* Product selector (custom products are managed in Settings) */}
                                     <CustomSelect
+                                        compactOnMobile
                                         label={t('field.gel_product')}
                                         value={String(gelProductId)}
                                         onChange={handleGelProductSelect}
@@ -798,6 +805,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
 
                                     {/* Site selector (display order: arm, thigh, abdomen, scrotal) */}
                                     <CustomSelect
+                                        compactOnMobile
                                         label={t('field.gel_site')}
                                         value={String(gelSite)}
                                         onChange={(val) => setGelSite(parseInt(val, 10) || 0)}
@@ -818,6 +826,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                                         nothing meaningful to enter — the scrotal note explains it. */}
                                     {GEL_SITE_ORDER[gelSite] !== GelSite.scrotal && (<>
                                         <CustomSelect
+                                            compactOnMobile
                                             label={t('field.gel_coverage')}
                                             value={String(gelCoverage)}
                                             onChange={handleGelCoverageSelect}
@@ -840,6 +849,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
 
                                     {/* Co-applied topical product (sunscreen / moisturizer) */}
                                     <CustomSelect
+                                        compactOnMobile
                                         label={t('field.gel_coapplied')}
                                         value={String(gelCoApplied)}
                                         onChange={(val) => setGelCoApplied(parseInt(val, 10) || 0)}
@@ -964,7 +974,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                             )}
 
                             {doseGuide && (
-                                <div className={`p-4 rounded-2xl border ${guideContainerClass} flex gap-3`}>
+                                <div className={`p-3 sm:p-4 rounded-2xl border ${guideContainerClass} flex gap-3`}>
                                     <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--text-tertiary)' }} />
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
@@ -994,7 +1004,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
 
                             {/* Sublingual Specifics */}
                             {route === Route.sublingual && (
-                                <div className="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-2xl border border-teal-100 dark:border-teal-800/40 space-y-4">
+                                <div className="bg-teal-50 dark:bg-teal-900/20 p-3 sm:p-4 rounded-2xl border border-teal-100 dark:border-teal-800/40 space-y-3 sm:space-y-4">
                                     <div className="flex justify-between items-center">
                                         <label className="text-sm font-bold text-teal-800 dark:text-teal-300 flex items-center gap-2">
                                             <Clock size={16} /> {t('field.sl_duration')}
@@ -1152,7 +1162,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                     </div>
                 )}
 
-                <div className="p-6 border-t shrink-0 flex gap-3 safe-area-pb"
+                <div className="p-4 sm:p-6 border-t shrink-0 flex gap-3 safe-area-pb"
                     style={{ borderColor: 'var(--border-secondary)', background: 'var(--bg-card-hover)' }}>
                     {eventToEdit && (
                         <button
@@ -1161,7 +1171,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                                 if (onDelete) onDelete(eventToEdit.id);
                             }}
                             aria-label={t('btn.delete')}
-                            className="w-16 h-14 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-100 border border-red-100 transition-colors"
+                            className="w-12 sm:w-16 h-12 sm:h-14 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-100 border border-red-100 transition-colors"
                         >
                             <Trash2 size={20} />
                         </button>
@@ -1171,7 +1181,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                             onClick={() => setShowPanel(p => !p)}
                             aria-label={t('template.title')}
                             aria-expanded={showPanel}
-                            className="w-14 h-14 flex items-center justify-center rounded-xl border transition-colors shrink-0"
+                            className="w-12 sm:w-14 h-12 sm:h-14 flex items-center justify-center rounded-xl border transition-colors shrink-0"
                             style={showPanel
                                 ? { background: 'var(--accent-50)', borderColor: 'var(--accent-200)', color: 'var(--accent-400)' }
                                 : { background: 'var(--bg-card-hover)', borderColor: 'var(--border-primary)', color: 'var(--text-tertiary)' }
@@ -1183,7 +1193,7 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className={`flex-1 h-14 text-white text-lg font-bold rounded-xl transition-all flex items-center justify-center gap-2 glass-btn-primary btn-press-glass ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className={`flex-1 h-12 sm:h-14 text-white text-base sm:text-lg font-bold rounded-xl transition-all flex items-center justify-center gap-2 glass-btn-primary btn-press-glass ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
                     >
                         {isSaving ? (
                             <>
