@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useLayoutEffect } from 'react';
-import { Activity, Info, Camera, Syringe, Pill, Droplet, Sticker } from 'lucide-react';
+import { Activity, Info, Camera, Syringe, Pill, Droplet, Sticker, Plus } from 'lucide-react';
 import { useTranslation } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import ResultChart from '../components/ResultChart';
@@ -178,6 +178,7 @@ interface OverviewViewProps {
   currentTime: Date;
   simCI?: SimCI | null;
   baselineE2PGmL?: number | null;
+  onAddEvent: () => void;
   onEditEvent: (event: DoseEvent) => void;
 }
 
@@ -204,6 +205,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({
   currentTime,
   simCI,
   baselineE2PGmL,
+  onAddEvent,
   onEditEvent,
 }) => {
   const { t, lang } = useTranslation();
@@ -413,8 +415,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                 ? `linear-gradient(135deg, rgba(${hexToRgb(colors[500])},0.12), var(--bg-card))`
                 : `linear-gradient(135deg, rgba(${hexToRgb(colors[500])},0.06), var(--bg-card))`,
             }}>
-            <div className="flex items-center mb-3">
-              <h1 className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] md:text-xs font-semibold border"
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <h1 className="inline-flex min-w-0 flex-wrap items-center gap-2 px-3 py-1 rounded-full text-[11px] md:text-xs font-semibold border"
                 style={{
                   background: 'var(--bg-card)',
                   color: 'var(--text-secondary)',
@@ -433,6 +435,15 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                   </span>
                 )}
               </h1>
+              <button
+                type="button"
+                onClick={onAddEvent}
+                aria-label={t('btn.add')}
+                className="md:hidden shrink-0 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl px-2.5 min-[360px]:px-3 text-xs font-bold text-white glass-btn-primary btn-press-glass transition"
+              >
+                <Plus size={15} aria-hidden="true" />
+                <span className="hidden min-[360px]:inline">{t('btn.add')}</span>
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {/* E2 Display */}
