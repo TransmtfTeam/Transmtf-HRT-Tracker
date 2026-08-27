@@ -31,6 +31,7 @@ const FIELD_KEYS: Record<string, string> = {
   calibrationModel: 'sync.conflict.field.calibrationModel',
   calibrationMode: 'sync.conflict.field.calibrationMode',
   themeColor: 'sync.conflict.field.theme',
+  themeMode: 'settings.theme.mode',
   darkMode: 'sync.conflict.field.darkMode',
   applyE2LearningToCPA: 'sync.conflict.field.applyE2LearningToCPA',
   applyCPAInhibitionToE2: 'sync.conflict.field.applyCPAInhibitionToE2',
@@ -141,6 +142,8 @@ function formatFieldValue(field: string, value: any, t: (k: string) => string): 
     }
     case 'themeColor':
       return value;
+    case 'themeMode':
+      return t(`settings.theme.${value}`);
     case 'darkMode':
     case 'applyE2LearningToCPA':
     case 'applyCPAInhibitionToE2':
