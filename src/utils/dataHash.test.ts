@@ -25,6 +25,7 @@ describe('computeDataHash schema versioning', () => {
         const p = projectForSync({});
         expect(p.gelProducts).toEqual([]);
         expect(p.darkMode).toBe(false);
+        expect(p.themeMode).toBe('light');
         expect(p.themeColor).toBe('');
         expect(p.weight).toBe(0);
     });

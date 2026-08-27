@@ -56,7 +56,7 @@ function deepEqual(a: any, b: any): boolean {
 const SYNC_FIELDS = [
   'events', 'weight', 'labResults', 'lang',
   'calibrationModel', 'calibrationMode', 'applyE2LearningToCPA',
-  'applyCPAInhibitionToE2', 'themeColor', 'darkMode',
+  'applyCPAInhibitionToE2', 'themeColor', 'themeMode', 'darkMode',
   'gelProducts',
 ] as const;
 
@@ -121,6 +121,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const applyE2Raw = localStorage.getItem('hrt-apply-e2-learning-to-cpa');
     const applyCPARaw = localStorage.getItem('hrt-apply-cpa-inhibition-to-e2');
     const themeColor = localStorage.getItem('hrt-theme-color') || 'sakura';
+    const savedThemeMode = localStorage.getItem('hrt-theme-mode');
     const darkModeRaw = localStorage.getItem('hrt-dark-mode');
     const gelProductsRaw = localStorage.getItem('hrt-gel-products');
 
@@ -148,6 +149,9 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const applyE2LearningToCPA = applyE2Raw === '1' || applyE2Raw?.toLowerCase() === 'true';
     const applyCPAInhibitionToE2 = applyCPARaw === '1' || applyCPARaw?.toLowerCase() === 'true';
     const darkMode = darkModeRaw === '1' || darkModeRaw === 'true';
+    const themeMode = savedThemeMode === 'system' || savedThemeMode === 'light' || savedThemeMode === 'dark'
+      ? savedThemeMode
+      : darkMode ? 'dark' : 'light';
     const gelProducts = safeParseArray(gelProductsRaw);
     const dataHash = computeDataHash({
       events: parsedEvents,
@@ -159,6 +163,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       applyE2LearningToCPA,
       applyCPAInhibitionToE2,
       themeColor,
+      themeMode,
       darkMode,
       gelProducts,
     });
@@ -174,6 +179,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       applyE2LearningToCPA,
       applyCPAInhibitionToE2,
       themeColor,
+      themeMode,
       darkMode,
       gelProducts,
       lastModified: storedLastModified,
@@ -193,6 +199,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     applyE2LearningToCPA?: boolean;
     applyCPAInhibitionToE2?: boolean;
     themeColor?: string;
+    themeMode?: string;
     darkMode?: boolean;
     gelProducts?: any[];
     lastModified: string;
@@ -218,6 +225,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         applyE2LearningToCPA: localData.applyE2LearningToCPA,
         applyCPAInhibitionToE2: localData.applyCPAInhibitionToE2,
         themeColor: localData.themeColor,
+        themeMode: localData.themeMode,
         darkMode: localData.darkMode,
         gelProducts: localData.gelProducts,
       });
@@ -266,6 +274,11 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (data?.applyE2LearningToCPA !== undefined) localStorage.setItem('hrt-apply-e2-learning-to-cpa', data.applyE2LearningToCPA ? '1' : '0');
     if (data?.applyCPAInhibitionToE2 !== undefined) localStorage.setItem('hrt-apply-cpa-inhibition-to-e2', data.applyCPAInhibitionToE2 ? '1' : '0');
     if (data?.themeColor) localStorage.setItem('hrt-theme-color', data.themeColor);
+    if (data?.themeMode === 'system' || data?.themeMode === 'light' || data?.themeMode === 'dark') {
+      localStorage.setItem('hrt-theme-mode', data.themeMode);
+    } else if (data?.darkMode !== undefined) {
+      localStorage.setItem('hrt-theme-mode', data.darkMode ? 'dark' : 'light');
+    }
     if (data?.darkMode !== undefined) localStorage.setItem('hrt-dark-mode', data.darkMode ? '1' : '0');
     if (data?.gelProducts !== undefined) localStorage.setItem('hrt-gel-products', JSON.stringify(data.gelProducts));
     if (data?.lastModified || fallbackTimestamp) localStorage.setItem('hrt-last-modified', data?.lastModified || fallbackTimestamp || '');
@@ -280,6 +293,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       applyE2LearningToCPA: data?.applyE2LearningToCPA ?? localData.applyE2LearningToCPA,
       applyCPAInhibitionToE2: data?.applyCPAInhibitionToE2 ?? localData.applyCPAInhibitionToE2,
       themeColor: data?.themeColor || localData.themeColor,
+      themeMode: data?.themeMode || localData.themeMode,
       darkMode: data?.darkMode ?? localData.darkMode,
       gelProducts: data?.gelProducts ?? localData.gelProducts,
     });
@@ -343,6 +357,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         applyE2LearningToCPA: cloudData.applyE2LearningToCPA ?? localData.applyE2LearningToCPA,
         applyCPAInhibitionToE2: cloudData.applyCPAInhibitionToE2 ?? localData.applyCPAInhibitionToE2,
         themeColor: cloudData.themeColor || localData.themeColor,
+        themeMode: cloudData.themeMode || (cloudData.darkMode === undefined ? localData.themeMode : cloudData.darkMode ? 'dark' : 'light'),
         darkMode: cloudData.darkMode ?? localData.darkMode,
         gelProducts: cloudData.gelProducts || [],
       });
@@ -535,7 +550,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.storageArea !== localStorage) return;
-      const syncKeys = ['hrt-events', 'hrt-weight', 'hrt-lab-results', 'hrt-lang', 'hrt-calibration-model', 'hrt-calibration-mode', 'hrt-apply-e2-learning-to-cpa', 'hrt-apply-cpa-inhibition-to-e2', 'hrt-theme-color', 'hrt-dark-mode', 'hrt-gel-products'];
+      const syncKeys = ['hrt-events', 'hrt-weight', 'hrt-lab-results', 'hrt-lang', 'hrt-calibration-model', 'hrt-calibration-mode', 'hrt-apply-e2-learning-to-cpa', 'hrt-apply-cpa-inhibition-to-e2', 'hrt-theme-color', 'hrt-theme-mode', 'hrt-dark-mode', 'hrt-gel-products'];
       if (e.key && syncKeys.includes(e.key)) performSync();
     };
 

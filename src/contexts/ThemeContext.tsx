@@ -4,6 +4,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 export type ThemeColorId =
   | 'sakura' | 'ocean' | 'lavender' | 'mint' | 'sunset'
   | 'berry' | 'coral' | 'sky' | 'rose' | 'teal';
+export type ThemeMode = 'system' | 'light' | 'dark';
+
+export const THEME_MODE_KEY = 'hrt-theme-mode';
+
+const isThemeMode = (value: string | null): value is ThemeMode =>
+  value === 'system' || value === 'light' || value === 'dark';
 
 interface ColorScale {
   50: string; 100: string; 200: string; 300: string;
@@ -44,7 +50,8 @@ interface ThemeContextType {
   themeColor: ThemeColorId;
   setThemeColor: (id: ThemeColorId) => void;
   isDark: boolean;
-  setIsDark: (v: boolean) => void;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
   /** Shorthand: returns CSS var reference, e.g. ac(500) → 'var(--accent-500)' */
   ac: (shade: keyof ColorScale) => string;
   /** Current preset's color scale */
@@ -66,16 +73,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (saved && saved in THEME_PRESETS) ? saved as ThemeColorId : 'sakura';
   });
 
-  const [isDark, setIsDarkState] = useState<boolean>(() => {
-    const saved = localStorage.getItem('hrt-dark-mode');
-    return saved === '1' || saved === 'true';
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
+    const savedMode = localStorage.getItem(THEME_MODE_KEY);
+    if (isThemeMode(savedMode)) return savedMode;
+    const legacyDark = localStorage.getItem('hrt-dark-mode');
+    return legacyDark === '1' || legacyDark === 'true' ? 'dark' : 'light';
   });
+  const [systemIsDark, setSystemIsDark] = useState(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+  const isDark = themeMode === 'system' ? systemIsDark : themeMode === 'dark';
 
   // Track whether the change came from cloud/cross-tab to avoid re-triggering sync
   const isExternalThemeUpdate = React.useRef(false);
-  const isExternalDarkUpdate = React.useRef(false);
+  const isExternalModeUpdate = React.useRef(false);
   const isInitialTheme = React.useRef(true);
-  const isInitialDark = React.useRef(true);
+  const isInitialMode = React.useRef(true);
 
   const colors = THEME_PRESETS[themeColor].colors;
 
@@ -103,6 +116,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [isDark]);
 
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (event: MediaQueryListEvent) => setSystemIsDark(event.matches);
+    setSystemIsDark(media.matches);
+    media.addEventListener('change', handleChange);
+    return () => media.removeEventListener('change', handleChange);
+  }, []);
+
   // Persist & notify cloud sync (skip on initial mount and external updates)
   useEffect(() => {
     if (isInitialTheme.current) {
@@ -120,20 +141,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     window.dispatchEvent(new CustomEvent('hrt-local-data-updated', { detail: { key: 'hrt-theme-color' } }));
   }, [themeColor]);
   useEffect(() => {
-    if (isInitialDark.current) {
-      isInitialDark.current = false;
+    if (isInitialMode.current) {
+      isInitialMode.current = false;
       return;
     }
+    localStorage.setItem(THEME_MODE_KEY, themeMode);
+    // Keep the legacy field current for older clients and cloud snapshots.
     localStorage.setItem('hrt-dark-mode', isDark ? '1' : '0');
-    if (isExternalDarkUpdate.current) {
-      isExternalDarkUpdate.current = false;
+    if (isExternalModeUpdate.current) {
+      isExternalModeUpdate.current = false;
       return;
     }
     const now = new Date().toISOString();
     localStorage.setItem('hrt-last-modified', now);
     localStorage.setItem('hrt-last-data-updated', now);
-    window.dispatchEvent(new CustomEvent('hrt-local-data-updated', { detail: { key: 'hrt-dark-mode' } }));
-  }, [isDark]);
+    window.dispatchEvent(new CustomEvent('hrt-local-data-updated', { detail: { key: THEME_MODE_KEY } }));
+  }, [themeMode]);
 
   // Listen for storage changes (cross-tab / cloud sync)
   useEffect(() => {
@@ -142,9 +165,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isExternalThemeUpdate.current = true;
         setThemeColorState(e.newValue as ThemeColorId);
       }
-      if (e.key === 'hrt-dark-mode') {
-        isExternalDarkUpdate.current = true;
-        setIsDarkState(e.newValue === '1' || e.newValue === 'true');
+      if (e.key === THEME_MODE_KEY && isThemeMode(e.newValue)) {
+        isExternalModeUpdate.current = true;
+        setThemeModeState(e.newValue);
+      } else if (e.key === 'hrt-dark-mode' && !localStorage.getItem(THEME_MODE_KEY)) {
+        isExternalModeUpdate.current = true;
+        setThemeModeState(e.newValue === '1' || e.newValue === 'true' ? 'dark' : 'light');
       }
     };
     window.addEventListener('storage', handler);
@@ -155,15 +181,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setThemeColorState(id);
   }, []);
 
-  const setIsDark = useCallback((v: boolean) => {
-    setIsDarkState(v);
+  const setThemeMode = useCallback((mode: ThemeMode) => {
+    setThemeModeState(mode);
   }, []);
 
   const ac = useCallback((shade: keyof ColorScale) => `var(--accent-${shade})`, []);
 
   const value = useMemo(() => ({
-    themeColor, setThemeColor, isDark, setIsDark, ac, colors,
-  }), [themeColor, setThemeColor, isDark, setIsDark, ac, colors]);
+    themeColor, setThemeColor, isDark, themeMode, setThemeMode, ac, colors,
+  }), [themeColor, setThemeColor, isDark, themeMode, setThemeMode, ac, colors]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
