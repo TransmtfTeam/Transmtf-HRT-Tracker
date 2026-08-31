@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { SimulationResult, DoseEvent, LabResult, interpolateConcentration_E2, interpolateCompoundConcentration, isAntiandrogen, pickPrimaryAntiandrogen, ANTIANDROGENS, Ester, convertToPgMl } from '../../logic';
 import { formatDate } from '../utils/helpers';
+import { calculateNiceAxis } from '../utils/chartAxis';
 
 interface SimCI {
     timeH: number[];
@@ -49,15 +50,6 @@ function interpAt(timeH: number[], values: number[], h: number): number | undefi
     return isFinite(v) ? v : undefined;
 }
 
-function niceCeil(value: number, fallback: number): number {
-    if (!isFinite(value) || value <= 0) return fallback;
-    const exp = Math.floor(Math.log10(value));
-    const base = Math.pow(10, exp);
-    const norm = value / base;
-    const step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
-    return step * base;
-}
-
 function formatAxisTick(raw: any): string {
     const n = Number(raw);
     if (!isFinite(n) || n < 0) return '0';
@@ -70,6 +62,7 @@ const CHART_WIDTH_DEFAULT = 2100;
 const CHART_HEIGHT_DEFAULT = 900;
 const E2_FALLBACK_MAX = 10;
 const CPA_FALLBACK_MAX = 1;
+const AXIS_TICK_COUNT = 4;
 const MAX_POINTS = 600;
 
 function downsample(series: ChartPoint[], maxPts: number): ChartPoint[] {
@@ -203,7 +196,7 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
     for (const l of labPoints) {
         if (l.time >= minTime && l.time <= maxTime && l.conc > e2Peak) e2Peak = l.conc;
     }
-    const yDomainLeft: [number, number] = [0, niceCeil(e2Peak * 1.15, E2_FALLBACK_MAX)];
+    const yAxisLeft = calculateNiceAxis(0, e2Peak * 1.15, AXIS_TICK_COUNT, E2_FALLBACK_MAX);
 
     let cpaPeak = CPA_FALLBACK_MAX;
     for (const d of visibleData) {
@@ -214,7 +207,7 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
             if (ciHigh > cpaPeak) cpaPeak = ciHigh;
         }
     }
-    const yDomainRight: [number, number] = [0, niceCeil(cpaPeak * 1.15, CPA_FALLBACK_MAX)];
+    const yAxisRight = calculateNiceAxis(0, cpaPeak * 1.15, AXIS_TICK_COUNT, CPA_FALLBACK_MAX);
 
     const nowPoint = useMemo(() => {
         if (!sim || !data.length) return null;
@@ -269,7 +262,8 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
             />
             <YAxis
                 yAxisId="left"
-                domain={yDomainLeft}
+                domain={yAxisLeft.domain}
+                ticks={yAxisLeft.ticks}
                 tickFormatter={formatAxisTick}
                 tick={{ fontSize: 18, fill: tickColorE2, fontWeight: 600 }}
                 axisLine={false}
@@ -281,7 +275,8 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
                 <YAxis
                     yAxisId="right"
                     orientation="right"
-                    domain={yDomainRight}
+                    domain={yAxisRight.domain}
+                    ticks={yAxisRight.ticks}
                     tickFormatter={formatAxisTick}
                     tick={{ fontSize: 18, fill: aaColor, fontWeight: 600 }}
                     axisLine={false}
