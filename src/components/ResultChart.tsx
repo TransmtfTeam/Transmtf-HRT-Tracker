@@ -3,6 +3,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 import { formatDate, formatTime } from '../utils/helpers';
 import { SimulationResult, DoseEvent, interpolateConcentration_E2, interpolateCompoundConcentration, isAntiandrogen, pickPrimaryAntiandrogen, ANTIANDROGENS, Ester, LabResult, convertToPgMl } from '../../logic';
 import { Activity, RotateCcw, Info, FlaskConical, Camera } from 'lucide-react';
+import { calculateNiceAxis } from '../utils/chartAxis';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceDot, Area, AreaChart, ComposedChart, Scatter, Brush
 } from 'recharts';
@@ -319,17 +320,9 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
     const rafUpdateRef = useRef<number | null>(null);
     const E2_AXIS_FALLBACK_MAX = 10;
     const CPA_AXIS_FALLBACK_MAX = 1;
+    const AXIS_TICK_COUNT = 4;
     const MAX_RENDER_POINTS = 1200;
     const MAX_OVERVIEW_POINTS = 180;
-
-    const niceCeil = (value: number, fallback: number): number => {
-        if (!Number.isFinite(value) || value <= 0) return fallback;
-        const exp = Math.floor(Math.log10(value));
-        const base = Math.pow(10, exp);
-        const norm = value / base;
-        const step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
-        return step * base;
-    };
 
     const formatAxisTick = (raw: any): string => {
         const n = Number(raw);
@@ -494,7 +487,7 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
 
     // Compute left-axis Y domain from visible E2-related series in current viewport.
     // CI is included but bounded relative to the base curve, to avoid squeezing curves to the floor.
-    const yDomainLeft = useMemo((): [number, number | string] => {
+    const yAxisLeft = useMemo(() => {
         const visibleMin = xDomain ? xDomain[0] : minTime;
         const visibleMax = xDomain ? xDomain[1] : maxTime;
         // Use downsampled data during interactive sliding to reduce per-frame cost.
@@ -536,13 +529,11 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
         const peak = Math.max(basePeak, ciPeak, E2_AXIS_FALLBACK_MAX);
         const padded = Math.max(E2_AXIS_FALLBACK_MAX, peak * 1.12); // 12% headroom
         const lower = minVal > 0 ? niceFloor(minVal * 0.85, 0) : 0;
-        let upper = niceCeil(padded, E2_AXIS_FALLBACK_MAX);
-        if (upper - lower < 1) upper = lower + 1;
-        return [lower, upper];
+        return calculateNiceAxis(lower, padded, AXIS_TICK_COUNT, E2_AXIS_FALLBACK_MAX);
     }, [data, labPoints, xDomain, minTime, maxTime, simCI, baselineE2PGmL]);
 
     // Compute right-axis Y domain from visible CPA-related series in current viewport.
-    const yDomainRight = useMemo((): [number, number | string] => {
+    const yAxisRight = useMemo(() => {
         const visibleMin = xDomain ? xDomain[0] : minTime;
         const visibleMax = xDomain ? xDomain[1] : maxTime;
         const source = data;
@@ -569,7 +560,7 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
         const ciPeak = Math.min(ciPeakRaw, ciCap);
         const peak = Math.max(basePeak, ciPeak, CPA_AXIS_FALLBACK_MAX);
         const padded = Math.max(CPA_AXIS_FALLBACK_MAX, peak * 1.12); // 12% headroom
-        return [0, niceCeil(padded, CPA_AXIS_FALLBACK_MAX)];
+        return calculateNiceAxis(0, padded, AXIS_TICK_COUNT, CPA_AXIS_FALLBACK_MAX);
     }, [data, xDomain, minTime, maxTime]);
 
     const nowPoint = useMemo(() => {
@@ -817,7 +808,8 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
                         <YAxis
                             yAxisId="left"
                             dataKey="concE2"
-                            domain={yDomainLeft}
+                            domain={yAxisLeft.domain}
+                            ticks={yAxisLeft.ticks}
                             allowDataOverflow={false}
                             allowDecimals={false}
                             tickFormatter={formatAxisTick}
@@ -832,7 +824,8 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
                             yAxisId="right"
                             orientation="right"
                             dataKey="concCPA"
-                            domain={yDomainRight}
+                            domain={yAxisRight.domain}
+                            ticks={yAxisRight.ticks}
                             tickFormatter={formatAxisTick}
                             tick={{fontSize: 10, fill: aaColor, fontWeight: 600}}
                             axisLine={false}
