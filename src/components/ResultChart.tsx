@@ -801,7 +801,7 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
                                 <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-secondary)" />
+                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--text-tertiary)" strokeOpacity={0.65} />
                         <XAxis
                             dataKey="time"
                             type="number"

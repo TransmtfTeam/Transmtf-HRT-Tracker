@@ -235,7 +235,7 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
     // Theme-aware colors
     const accent500 = themeColors?.[500] ?? '#f43f5e';
     const accent300 = themeColors?.[300] ?? '#fda4af';
-    const gridColor = isDark ? '#1e293b' : '#e2e8f0';
+    const gridColor = isDark ? '#64748b' : '#94a3b8';
     const tickColorX = isDark ? '#64748b' : '#94a3b8';
     const tickColorE2 = accent500;
     const nowLineColor = isDark ? `${accent500}80` : accent300;
@@ -254,7 +254,7 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
                     <stop offset="95%" stopColor={accent500} stopOpacity={0} />
                 </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+            <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={gridColor} strokeOpacity={0.65} />
             <XAxis
                 dataKey="time"
                 type="number"
