@@ -694,13 +694,13 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                         {/* Time */}
                         <div className="max-w-full flex-none space-y-2">
                             <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('field.time')}</label>
-                            <div className="flex max-w-full items-center gap-2">
+                            <div className="flex max-w-full items-center gap-2 sm:gap-3">
                                 <input
                                     ref={dateInputRef}
                                     type="datetime-local"
                                     value={dateStr}
                                     onChange={e => setDateStr(e.target.value)}
-                                    className="min-w-0 max-w-full bg-transparent p-0 font-mono text-lg font-bold focus:outline-none focus:ring-0"
+                                    className="min-w-0 max-w-full bg-transparent p-0 font-mono text-lg sm:text-xl font-bold focus:outline-none focus:ring-0"
                                     style={{ color: 'var(--text-primary)', border: 'none' }}
                                 />
                                 <button
