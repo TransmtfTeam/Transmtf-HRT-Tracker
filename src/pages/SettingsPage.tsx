@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 import { useDialog } from '../contexts/DialogContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -60,12 +60,36 @@ const readExtraSyncFields = () => {
     };
 };
 
+const THEME_MODE_OPTIONS = [
+    ['system', Monitor, 'settings.theme.system'],
+    ['light', Sun, 'settings.theme.light'],
+    ['dark', Moon, 'settings.theme.dark'],
+] as const satisfies readonly (readonly [ThemeMode, typeof Monitor, string])[];
+
 const SettingsPage: React.FC = () => {
     const { t, lang, setLang } = useTranslation();
     const { showDialog } = useDialog();
     const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
     const { events, setEvents, labResults, setLabResults, gelProducts, setGelProducts } = useAppData();
     const { themeMode, setThemeMode } = useTheme();
+    const themeModeRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+    // APG radio-group keys: arrows move selection and focus together, Home/End
+    // jump to the ends. Space/Enter are already handled by the native button.
+    const handleThemeModeKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+        const last = THEME_MODE_OPTIONS.length - 1;
+        let next = index;
+        switch (e.key) {
+            case 'ArrowRight': case 'ArrowDown': next = index === last ? 0 : index + 1; break;
+            case 'ArrowLeft': case 'ArrowUp': next = index === 0 ? last : index - 1; break;
+            case 'Home': next = 0; break;
+            case 'End': next = last; break;
+            default: return;
+        }
+        e.preventDefault();
+        setThemeMode(THEME_MODE_OPTIONS[next][0]);
+        themeModeRefs.current[next]?.focus();
+    };
 
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isPasswordInputOpen, setIsPasswordInputOpen] = useState(false);
@@ -303,11 +327,7 @@ const SettingsPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 gap-1 rounded-xl p-1" style={{ background: 'var(--bg-secondary)' }} role="radiogroup" aria-label={t('settings.theme.mode')}>
-                                    {([
-                                        ['system', Monitor, 'settings.theme.system'],
-                                        ['light', Sun, 'settings.theme.light'],
-                                        ['dark', Moon, 'settings.theme.dark'],
-                                    ] as const).map(([mode, Icon, labelKey]) => {
+                                    {THEME_MODE_OPTIONS.map(([mode, Icon, labelKey], index) => {
                                         const active = themeMode === mode;
                                         return (
                                             <button
@@ -315,8 +335,13 @@ const SettingsPage: React.FC = () => {
                                                 type="button"
                                                 role="radio"
                                                 aria-checked={active}
-                                                onClick={() => setThemeMode(mode as ThemeMode)}
-                                                className="flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent-300)]"
+                                                // A radio group is a single tab stop: only the checked
+                                                // option is reachable by Tab, arrows move within it.
+                                                tabIndex={active ? 0 : -1}
+                                                ref={(el) => { themeModeRefs.current[index] = el; }}
+                                                onClick={() => setThemeMode(mode)}
+                                                onKeyDown={(e) => handleThemeModeKeyDown(e, index)}
+                                                className="flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-300)]"
                                                 style={active ? {
                                                     color: 'var(--accent-600)',
                                                     background: 'var(--bg-card)',
