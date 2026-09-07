@@ -10,8 +10,6 @@ export const TRANSLATIONS_BASE = {
 
         "settings.theme.title": "主题颜色",
         "settings.theme.desc": "选择你喜欢的主题色，将跨设备同步。",
-        "settings.theme.dark_mode": "深色模式",
-        "settings.theme.dark_mode_desc": "启用深色背景，减少眼部疲劳。",
         "settings.theme.mode": "显示模式",
         "settings.theme.mode_desc": "选择显示外观，自动模式会跟随系统设置。",
         "settings.theme.system": "自动",
@@ -761,8 +759,6 @@ export const TRANSLATIONS_BASE = {
 
         "settings.theme.title": "Theme Color",
         "settings.theme.desc": "Pick your accent color. Syncs across devices.",
-        "settings.theme.dark_mode": "Dark Mode",
-        "settings.theme.dark_mode_desc": "Switch to dark background to reduce eye strain.",
         "settings.theme.mode": "Display Mode",
         "settings.theme.mode_desc": "Choose an appearance, or follow your system setting automatically.",
         "settings.theme.system": "Auto",
@@ -1841,8 +1837,6 @@ export const TRANSLATIONS = {
         // Missing keys added
         "settings.theme.title": "主題顏色",
         "settings.theme.desc": "選擇您喜歡的主題色，將跨裝置同步。",
-        "settings.theme.dark_mode": "深色模式",
-        "settings.theme.dark_mode_desc": "啟用深色背景，減少眼部疲勞。",
         "settings.theme.mode": "顯示模式",
         "settings.theme.mode_desc": "選擇顯示外觀，自動模式會跟隨系統設定。",
         "settings.theme.system": "自動",
