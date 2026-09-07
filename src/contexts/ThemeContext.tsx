@@ -124,6 +124,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => media.removeEventListener('change', handleChange);
   }, []);
 
+  // Mirror the derived boolean into the legacy key for older clients. This runs
+  // on every isDark change - including a system-theme flip under 'system' mode -
+  // and deliberately touches no timestamp: nothing the user did has changed.
+  useEffect(() => {
+    localStorage.setItem('hrt-dark-mode', isDark ? '1' : '0');
+  }, [isDark]);
+
   // Persist & notify cloud sync (skip on initial mount and external updates)
   useEffect(() => {
     if (isInitialTheme.current) {
@@ -146,8 +153,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
     localStorage.setItem(THEME_MODE_KEY, themeMode);
-    // Keep the legacy field current for older clients and cloud snapshots.
-    localStorage.setItem('hrt-dark-mode', isDark ? '1' : '0');
     if (isExternalModeUpdate.current) {
       isExternalModeUpdate.current = false;
       return;
@@ -158,19 +163,35 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     window.dispatchEvent(new CustomEvent('hrt-local-data-updated', { detail: { key: THEME_MODE_KEY } }));
   }, [themeMode]);
 
+  // Mirror current values so the storage handler can recognise a notification
+  // that merely restates what we already hold. Arming the "external update"
+  // flag for such a no-op would leave it set (React bails out of an identical
+  // setState, so the persist effect never runs to clear it) and the user's next
+  // real change would then be mistaken for an external one and never synced.
+  const themeColorRef = React.useRef(themeColor);
+  const themeModeRef = React.useRef(themeMode);
+  useEffect(() => { themeColorRef.current = themeColor; }, [themeColor]);
+  useEffect(() => { themeModeRef.current = themeMode; }, [themeMode]);
+
   // Listen for storage changes (cross-tab / cloud sync)
   useEffect(() => {
     const handler = (e: StorageEvent) => {
-      if (e.key === 'hrt-theme-color' && e.newValue && e.newValue in THEME_PRESETS) {
+      if (e.key === 'hrt-theme-color' && e.newValue && e.newValue in THEME_PRESETS
+          && e.newValue !== themeColorRef.current) {
         isExternalThemeUpdate.current = true;
         setThemeColorState(e.newValue as ThemeColorId);
       }
       if (e.key === THEME_MODE_KEY && isThemeMode(e.newValue)) {
-        isExternalModeUpdate.current = true;
-        setThemeModeState(e.newValue);
+        if (e.newValue !== themeModeRef.current) {
+          isExternalModeUpdate.current = true;
+          setThemeModeState(e.newValue);
+        }
       } else if (e.key === 'hrt-dark-mode' && !localStorage.getItem(THEME_MODE_KEY)) {
-        isExternalModeUpdate.current = true;
-        setThemeModeState(e.newValue === '1' || e.newValue === 'true' ? 'dark' : 'light');
+        const next = e.newValue === '1' || e.newValue === 'true' ? 'dark' : 'light';
+        if (next !== themeModeRef.current) {
+          isExternalModeUpdate.current = true;
+          setThemeModeState(next);
+        }
       }
     };
     window.addEventListener('storage', handler);
