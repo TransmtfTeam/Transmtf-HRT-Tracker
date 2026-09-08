@@ -1028,8 +1028,12 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
                             />
                         )}
 
+                        {/* Only rendered when there is a point: an empty data
+                            array makes Recharts fall back to the chart's own
+                            series and stamp this marker on every point. */}
+                        {nowPoint && (
                         <Scatter
-                            data={nowPoint ? [nowPoint] : []}
+                            data={[nowPoint]}
                             yAxisId="left"
                             isAnimationActive={false}
                             shape={({ cx, cy }: any) => {
@@ -1047,9 +1051,10 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
                                 );
                             }}
                         />
-                        {hasCPADoses && (
+                        )}
+                        {nowPoint && hasCPADoses && (
                         <Scatter
-                            data={nowPoint ? [nowPoint] : []}
+                            data={[nowPoint]}
                             yAxisId="right"
                             isAnimationActive={false}
                             shape={({ cx, cy }: any) => {

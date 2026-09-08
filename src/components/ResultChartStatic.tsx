@@ -238,7 +238,10 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
     const yAxisRight = calculateNiceDomain(0, cpaPeak * 1.15, AXIS_TICK_COUNT, CPA_FALLBACK_MAX);
 
     const nowPoint = useMemo(() => {
-        if (!sim || !data.length) return null;
+        // A "now" marker means nothing on an export of some past window, and
+        // like the other markers it would still reach the Y axis while the X
+        // axis clips it out of sight.
+        if (!sim || !data.length || now < minTime || now > maxTime) return null;
         const h = now / 3600000;
         const concE2Raw = interpolateConcentration_E2(sim, h);
         const concCPA = primaryAA ? interpolateCompoundConcentration(sim, primaryAA, h) : null;
@@ -249,7 +252,7 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
             concE2: concE2Raw ? concE2Raw + baseShift : 0,
             concCPA: (concCPA || 0) * aaScale,
         };
-    }, [sim, data, now, hasPersonalModel, baselineE2PGmL, primaryAA, aaScale]);
+    }, [sim, data, now, minTime, maxTime, hasPersonalModel, baselineE2PGmL, primaryAA, aaScale]);
 
     if (!sim || data.length === 0) return null;
 
@@ -356,14 +359,18 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
                 <Area data={data} type="monotone" dataKey="concPersonalCPA" yAxisId="right" stroke={aaColor} strokeWidth={2.5} strokeDasharray="6 3" fill="none" isAnimationActive={false} dot={false} activeDot={false} />
             )}
 
-            {/* Now dot */}
-            <Scatter data={nowPoint ? [nowPoint] : []} yAxisId="left" isAnimationActive={false}
-                shape={({ cx, cy }: any) => (
-                    <circle cx={cx} cy={cy} r={8} fill="#bfdbfe" stroke="white" strokeWidth={2.5} />
-                )}
-            />
-            {hasCPADoses && (
-                <Scatter data={nowPoint ? [nowPoint] : []} yAxisId="right" isAnimationActive={false}
+            {/* Now dot. Rendered only when there is one: an empty data array
+                makes Recharts fall back to the chart's own series and stamp the
+                marker on every point. */}
+            {nowPoint && (
+                <Scatter data={[nowPoint]} yAxisId="left" isAnimationActive={false}
+                    shape={({ cx, cy }: any) => (
+                        <circle cx={cx} cy={cy} r={8} fill="#bfdbfe" stroke="white" strokeWidth={2.5} />
+                    )}
+                />
+            )}
+            {nowPoint && hasCPADoses && (
+                <Scatter data={[nowPoint]} yAxisId="right" isAnimationActive={false}
                     shape={({ cx, cy }: any) => (
                         <circle cx={cx} cy={cy} r={8} fill={aaColor} stroke="white" strokeWidth={2.5} />
                     )}
