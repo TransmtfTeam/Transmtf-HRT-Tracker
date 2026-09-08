@@ -84,9 +84,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
   const isDark = themeMode === 'system' ? systemIsDark : themeMode === 'dark';
 
-  // Track whether the change came from cloud/cross-tab to avoid re-triggering sync
-  const isExternalThemeUpdate = React.useRef(false);
-  const isExternalModeUpdate = React.useRef(false);
+  // The last value cloud/cross-tab sync pushed into state, so the persist
+  // effects can tell an external update from a user edit and avoid echoing it
+  // straight back. This records the VALUE rather than raising a one-shot flag:
+  // React drops a setState that lands on the value already held - which a burst
+  // of notifications can easily do - and a flag armed for an update that never
+  // commits would stay armed and swallow the user's next real change.
+  const externalThemeValue = React.useRef<ThemeColorId | null>(null);
+  const externalModeValue = React.useRef<ThemeMode | null>(null);
   const isInitialTheme = React.useRef(true);
   const isInitialMode = React.useRef(true);
 
@@ -138,10 +143,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
     localStorage.setItem('hrt-theme-color', themeColor);
-    if (isExternalThemeUpdate.current) {
-      isExternalThemeUpdate.current = false;
-      return;
-    }
+    const wasExternal = externalThemeValue.current === themeColor;
+    externalThemeValue.current = null;
+    if (wasExternal) return;
     const now = new Date().toISOString();
     localStorage.setItem('hrt-last-modified', now);
     localStorage.setItem('hrt-last-data-updated', now);
@@ -153,45 +157,31 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
     localStorage.setItem(THEME_MODE_KEY, themeMode);
-    if (isExternalModeUpdate.current) {
-      isExternalModeUpdate.current = false;
-      return;
-    }
+    const wasExternal = externalModeValue.current === themeMode;
+    externalModeValue.current = null;
+    if (wasExternal) return;
     const now = new Date().toISOString();
     localStorage.setItem('hrt-last-modified', now);
     localStorage.setItem('hrt-last-data-updated', now);
     window.dispatchEvent(new CustomEvent('hrt-local-data-updated', { detail: { key: THEME_MODE_KEY } }));
   }, [themeMode]);
 
-  // Mirror current values so the storage handler can recognise a notification
-  // that merely restates what we already hold. Arming the "external update"
-  // flag for such a no-op would leave it set (React bails out of an identical
-  // setState, so the persist effect never runs to clear it) and the user's next
-  // real change would then be mistaken for an external one and never synced.
-  const themeColorRef = React.useRef(themeColor);
-  const themeModeRef = React.useRef(themeMode);
-  useEffect(() => { themeColorRef.current = themeColor; }, [themeColor]);
-  useEffect(() => { themeModeRef.current = themeMode; }, [themeMode]);
-
   // Listen for storage changes (cross-tab / cloud sync)
   useEffect(() => {
     const handler = (e: StorageEvent) => {
-      if (e.key === 'hrt-theme-color' && e.newValue && e.newValue in THEME_PRESETS
-          && e.newValue !== themeColorRef.current) {
-        isExternalThemeUpdate.current = true;
+      if (e.key === 'hrt-theme-color' && e.newValue && e.newValue in THEME_PRESETS) {
+        externalThemeValue.current = e.newValue as ThemeColorId;
         setThemeColorState(e.newValue as ThemeColorId);
       }
       if (e.key === THEME_MODE_KEY && isThemeMode(e.newValue)) {
-        if (e.newValue !== themeModeRef.current) {
-          isExternalModeUpdate.current = true;
-          setThemeModeState(e.newValue);
-        }
+        externalModeValue.current = e.newValue;
+        setThemeModeState(e.newValue);
       } else if (e.key === 'hrt-dark-mode' && !localStorage.getItem(THEME_MODE_KEY)) {
-        const next = e.newValue === '1' || e.newValue === 'true' ? 'dark' : 'light';
-        if (next !== themeModeRef.current) {
-          isExternalModeUpdate.current = true;
-          setThemeModeState(next);
-        }
+        // Only honoured while this device has no explicit mode of its own: an
+        // older client's boolean must not override a mode the user picked here.
+        const next: ThemeMode = e.newValue === '1' || e.newValue === 'true' ? 'dark' : 'light';
+        externalModeValue.current = next;
+        setThemeModeState(next);
       }
     };
     window.addEventListener('storage', handler);
