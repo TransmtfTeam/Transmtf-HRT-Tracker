@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { SimulationResult, DoseEvent, LabResult, interpolateConcentration_E2, interpolateCompoundConcentration, isAntiandrogen, pickPrimaryAntiandrogen, ANTIANDROGENS, Ester, convertToPgMl } from '../../logic';
 import { formatDate } from '../utils/helpers';
-import { calculateNiceAxis } from '../utils/chartAxis';
+import { calculateNiceDomain } from '../utils/chartAxis';
 
 interface SimCI {
     timeH: number[];
@@ -187,16 +187,44 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
     // data is already filtered to xDomain, so use it directly for Y-domain computation
     const visibleData = data;
 
+    // Markers outside the shared window are clipped by the X axis and never
+    // drawn, yet Recharts still folds them into the Y domain - the scatter
+    // through its data, the lab dots through ifOverflow="extendDomain". A lab
+    // spike weeks outside a one-week export would flatten the curve the image
+    // is actually meant to show.
+    const visibleLabPoints = useMemo(
+        () => labPoints.filter((l) => l.time >= minTime && l.time <= maxTime),
+        [labPoints, minTime, maxTime],
+    );
+    const visibleDosePoints = useMemo(
+        () => dosePoints.filter((d) => d.time >= minTime && d.time <= maxTime),
+        [dosePoints, minTime, maxTime],
+    );
+
     // Y domains
     let e2Peak = E2_FALLBACK_MAX;
     for (const d of visibleData) {
         if (d.concE2 && d.concE2 > e2Peak) e2Peak = d.concE2;
         if (d.concPersonal && d.concPersonal > e2Peak) e2Peak = d.concPersonal;
+        // The CI band is stacked on ci95Low, so its top is the sum - account for
+        // it here, exactly as the antiandrogen axis below already does, to keep
+        // the suggested range from being widened afterwards. The 68% band sits
+        // inside the 95% one, so the wider bound covers both.
+        if (d.ci95Band !== undefined && d.ci95Low !== undefined) {
+            const ciHigh = d.ci95Low + d.ci95Band;
+            if (ciHigh > e2Peak) e2Peak = ciHigh;
+        }
     }
-    for (const l of labPoints) {
-        if (l.time >= minTime && l.time <= maxTime && l.conc > e2Peak) e2Peak = l.conc;
+    for (const l of visibleLabPoints) {
+        if (l.conc > e2Peak) e2Peak = l.conc;
     }
-    const yAxisLeft = calculateNiceAxis(0, e2Peak * 1.15, AXIS_TICK_COUNT, E2_FALLBACK_MAX);
+    // Dose markers are interpolated from the raw simulation while the series
+    // above is thinned by stride sampling, which does not preserve peaks - so a
+    // marker can sit above everything the thinned series knows about.
+    for (const d of visibleDosePoints) {
+        if (d.concE2 > e2Peak) e2Peak = d.concE2;
+    }
+    const yAxisLeft = calculateNiceDomain(0, e2Peak * 1.15, AXIS_TICK_COUNT, E2_FALLBACK_MAX, false);
 
     let cpaPeak = CPA_FALLBACK_MAX;
     for (const d of visibleData) {
@@ -207,7 +235,7 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
             if (ciHigh > cpaPeak) cpaPeak = ciHigh;
         }
     }
-    const yAxisRight = calculateNiceAxis(0, cpaPeak * 1.15, AXIS_TICK_COUNT, CPA_FALLBACK_MAX);
+    const yAxisRight = calculateNiceDomain(0, cpaPeak * 1.15, AXIS_TICK_COUNT, CPA_FALLBACK_MAX);
 
     const nowPoint = useMemo(() => {
         if (!sim || !data.length) return null;
@@ -262,8 +290,9 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
             />
             <YAxis
                 yAxisId="left"
-                domain={yAxisLeft.domain}
-                ticks={yAxisLeft.ticks}
+                domain={yAxisLeft}
+                allowDataOverflow={false}
+                allowDecimals={false}
                 tickFormatter={formatAxisTick}
                 tick={{ fontSize: 18, fill: tickColorE2, fontWeight: 600 }}
                 axisLine={false}
@@ -275,8 +304,8 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
                 <YAxis
                     yAxisId="right"
                     orientation="right"
-                    domain={yAxisRight.domain}
-                    ticks={yAxisRight.ticks}
+                    domain={yAxisRight}
+                    allowDataOverflow={false}
                     tickFormatter={formatAxisTick}
                     tick={{ fontSize: 18, fill: aaColor, fontWeight: 600 }}
                     axisLine={false}
@@ -342,7 +371,7 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
             )}
 
             {/* Lab result dots */}
-            {labPoints.map((point) => (
+            {visibleLabPoints.map((point) => (
                 <ReferenceDot
                     key={`slab-${point.id}`}
                     x={point.time}
@@ -361,8 +390,8 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
             ))}
 
             {/* Dose event dots */}
-            {dosePoints.length > 0 && (
-                <Scatter data={dosePoints} dataKey="concE2" yAxisId="left" isAnimationActive={false}
+            {visibleDosePoints.length > 0 && (
+                <Scatter data={visibleDosePoints} dataKey="concE2" yAxisId="left" isAnimationActive={false}
                     shape={({ cx, cy, payload }: any) => (
                         <circle cx={cx} cy={cy} r={5} fill={payload?.ester && isAntiandrogen(payload.ester) ? (ANTIANDROGENS[payload.ester as Ester]?.color ?? '#8b5cf6') : '#ec4899'} stroke="white" strokeWidth={2} />
                     )}
