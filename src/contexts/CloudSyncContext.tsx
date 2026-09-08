@@ -527,7 +527,12 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setIsSyncing(true);
 
       if (resolution === 'local') {
-        await pushLocalDataToCloud({ ...localData, lastModified: now, lastDataUpdated: now });
+        // Snapshot again rather than reusing the one captured when the conflict
+        // was raised: the dialog can sit open for a while, and under the
+        // 'system' display mode the derived dark flag changes on its own when
+        // the OS theme flips. The cloud and merge branches already re-read.
+        const currentLocal = getLocalDataSnapshot();
+        await pushLocalDataToCloud({ ...currentLocal, lastModified: now, lastDataUpdated: now });
         localStorage.setItem('hrt-last-modified', now);
         localStorage.setItem(LAST_DATA_UPDATED_KEY, now);
       } else if (resolution === 'cloud') {
