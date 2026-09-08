@@ -11,6 +11,27 @@
     <link rel="apple-touch-icon" href="/icon.svg">
     <title>HRT Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /* Resolve the display mode before first paint, so a dark user does not
+           get a flash of the light palette while React mounts. Mirrors the
+           resolution order in ThemeContext: explicit hrt-theme-mode wins, then
+           the legacy hrt-dark-mode boolean, and 'system' follows the OS. */
+        (function () {
+            try {
+                var mode = localStorage.getItem('hrt-theme-mode');
+                if (mode !== 'system' && mode !== 'light' && mode !== 'dark') {
+                    var legacy = localStorage.getItem('hrt-dark-mode');
+                    mode = (legacy === '1' || legacy === 'true') ? 'dark' : 'light';
+                }
+                var dark = mode === 'system'
+                    ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                    : mode === 'dark';
+                if (dark) document.documentElement.classList.add('dark');
+            } catch (e) {
+                /* Storage can throw in private mode; light is the safe default. */
+            }
+        })();
+    </script>
     <style>
         /* ─── CSS Custom Properties (Theme System) ─── */
         :root {
