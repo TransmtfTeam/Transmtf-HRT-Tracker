@@ -278,7 +278,21 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ? resolveThemeMode({ themeMode: data?.themeMode, darkMode: data?.darkMode })
       : localData.themeMode;
     if (resolvedThemeMode) localStorage.setItem('hrt-theme-mode', resolvedThemeMode);
-    if (data?.darkMode !== undefined) localStorage.setItem('hrt-dark-mode', data.darkMode ? '1' : '0');
+    // The legacy flag is a mirror of the mode, never an independent field: a
+    // conflict merge takes the mode from whichever side the user picked while
+    // darkMode still rides along from the cloud copy, and the pair would be
+    // pushed back out contradicting each other. Derive it here rather than
+    // waiting for ThemeProvider - resolveConflict snapshots and uploads before
+    // React can re-render, and since darkMode no longer feeds the hash, a
+    // correction made afterwards would never be pushed. 'system' has no
+    // device-independent answer, so record what this device actually shows,
+    // which is what ThemeProvider will settle on a moment later.
+    if (resolvedThemeMode) {
+      const mirrorsDark = resolvedThemeMode === 'system'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+        : resolvedThemeMode === 'dark';
+      localStorage.setItem('hrt-dark-mode', mirrorsDark ? '1' : '0');
+    }
     if (data?.gelProducts !== undefined) localStorage.setItem('hrt-gel-products', JSON.stringify(data.gelProducts));
     if (data?.lastModified || fallbackTimestamp) localStorage.setItem('hrt-last-modified', data?.lastModified || fallbackTimestamp || '');
     if (data?.lastDataUpdated || fallbackTimestamp) localStorage.setItem(LAST_DATA_UPDATED_KEY, data?.lastDataUpdated || fallbackTimestamp || '');
