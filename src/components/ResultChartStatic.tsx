@@ -363,14 +363,14 @@ const ResultChartStatic: React.FC<Props> = ({ sim, events, labResults, simCI, ba
                 makes Recharts fall back to the chart's own series and stamp the
                 marker on every point. */}
             {nowPoint && (
-                <Scatter data={[nowPoint]} yAxisId="left" isAnimationActive={false}
+                <Scatter data={[nowPoint]} dataKey="concE2" yAxisId="left" isAnimationActive={false}
                     shape={({ cx, cy }: any) => (
                         <circle cx={cx} cy={cy} r={8} fill="#bfdbfe" stroke="white" strokeWidth={2.5} />
                     )}
                 />
             )}
             {nowPoint && hasCPADoses && (
-                <Scatter data={[nowPoint]} yAxisId="right" isAnimationActive={false}
+                <Scatter data={[nowPoint]} dataKey="concCPA" yAxisId="right" isAnimationActive={false}
                     shape={({ cx, cy }: any) => (
                         <circle cx={cx} cy={cy} r={8} fill={aaColor} stroke="white" strokeWidth={2.5} />
                     )}
