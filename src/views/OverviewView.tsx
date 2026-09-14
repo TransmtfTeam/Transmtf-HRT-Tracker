@@ -485,8 +485,8 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                 </div>
                 {currentCI && (
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wide"
-                      style={{ color: 'var(--accent-300)' }}>95% CI</span>
+                    <span className="shrink-0 whitespace-nowrap text-[9px] font-bold uppercase tracking-wide"
+                      style={{ color: 'var(--accent-300)' }}>{t('chart.ci_band')}</span>
                     <span className="text-[11px] font-semibold"
                       style={{ color: 'var(--accent-400)' }}>
                       {currentCI.lo.toFixed(0)} – {currentCI.hi.toFixed(0)}
@@ -496,7 +496,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                 )}
                 {currentCI68 && (
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wide"
+                    <span className="shrink-0 whitespace-nowrap text-[9px] font-bold uppercase tracking-wide"
                       style={{ color: 'var(--accent-300)' }}>{t('chart.ci68_band')}</span>
                     <span className="text-[11px] font-semibold"
                       style={{ color: 'var(--accent-400)' }}>

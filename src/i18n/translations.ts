@@ -685,7 +685,7 @@ export const TRANSLATIONS_BASE = {
         "lab.learning_obs_val": "实测观测值",
         "lab.learning_residual": "对数残差",
         "chart.ci_band": "95% 置信区间",
-        "chart.ci68_band": "68% 区间",
+        "chart.ci68_band": "68% 置信区间",
         "chart.personal_model": "个体化模型",
         "chart.cpa_adherence": "E2 依从性估计",
         "chart.cpa_pop_range": "群体 PK 范围",
@@ -1552,6 +1552,13 @@ export const TRANSLATIONS = {
 
     "zh-TW": {
         ...TRANSLATIONS_BASE.zh,
+        "chart.ci_band": "95% 信賴區間",
+        "chart.ci68_band": "68% 信賴區間",
+        "chart.personal_model": "個人化模型",
+        "chart.cpa_adherence": "E2 依從性估計",
+        "chart.cpa_pop_range": "群體 PK 範圍",
+        "chart.cpa_note": "估算（雙室模型，未經直接測量）",
+        "chart.bica_note": "估算（一室模型，未經直接測量）",
         "app.title": "HRT 紀錄",
         "nav.home": "總覽",
         "nav.history": "紀錄",

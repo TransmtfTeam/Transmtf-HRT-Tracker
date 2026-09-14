@@ -604,7 +604,7 @@ const ShareImageModal: React.FC<Props> = ({
                                 <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     {currentCI && (
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', whiteSpace: 'nowrap' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: 800, color: accent300, textTransform: 'uppercase', letterSpacing: '0.1em' }}>95% CI</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 800, color: accent300, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('chart.ci_band')}</span>
                                             <span style={{ fontSize: '18px', fontWeight: 700, color: accent500 }}>
                                                 {currentCI.lo.toFixed(0)} – {currentCI.hi.toFixed(0)}
                                                 <span style={{ fontSize: '13px', fontWeight: 500, marginLeft: '6px', color: accent300 }}>pg/mL</span>
@@ -613,7 +613,7 @@ const ShareImageModal: React.FC<Props> = ({
                                     )}
                                     {currentCI68 && (
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', whiteSpace: 'nowrap' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: 800, color: accent300, textTransform: 'uppercase', letterSpacing: '0.1em' }}>68% CI</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 800, color: accent300, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('chart.ci68_band')}</span>
                                             <span style={{ fontSize: '18px', fontWeight: 700, color: accent500 }}>
                                                 {currentCI68.lo.toFixed(0)} – {currentCI68.hi.toFixed(0)}
                                                 <span style={{ fontSize: '13px', fontWeight: 500, marginLeft: '6px', color: accent300 }}>pg/mL</span>
@@ -693,7 +693,7 @@ const ShareImageModal: React.FC<Props> = ({
                                             {currentCPACI && (
                                                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', whiteSpace: 'nowrap' }}>
                                                     <span style={{ fontSize: '13px', fontWeight: 800, color: cpaSoft, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                                        95% CI
+                                                        {t('chart.ci_band')}
                                                     </span>
                                                     <span style={{ fontSize: '18px', fontWeight: 700, color: cpaPrimary }}>
                                                         {currentCPACI.lo.toFixed(2)} – {currentCPACI.hi.toFixed(2)}
