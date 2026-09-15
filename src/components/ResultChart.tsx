@@ -889,6 +889,7 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
                         <Tooltip
                             content={<CustomTooltip t={t} lang={lang} aaLabel={aaLabel} aaUnit={aaUnit} aaColor={aaColor} aaShowPersonal={aaPersonalized} />}
                             cursor={{ stroke: '#f6c4d7', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            isAnimationActive={false}
                             trigger="hover"
                         />
                         <ReferenceLine x={now} stroke="#f6c4d7" strokeDasharray="3 3" strokeWidth={1.2} yAxisId="left" />
