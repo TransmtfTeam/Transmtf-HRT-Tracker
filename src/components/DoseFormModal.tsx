@@ -1203,12 +1203,12 @@ const DoseFormModal: React.FC<DoseFormModalProps> = ({ isOpen, onClose, eventToE
                             {/* Sublingual Specifics */}
                             {route === Route.sublingual && (
                                 <div className="bg-teal-50 dark:bg-teal-900/20 p-3 sm:p-4 rounded-2xl border border-teal-100 dark:border-teal-800/40 space-y-3 sm:space-y-4">
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex justify-between items-center gap-3">
                                         <label className="text-sm font-bold text-teal-800 dark:text-teal-300 flex items-center gap-2">
-                                            <Clock size={16} /> {t('field.sl_duration')}
+                                            <Clock size={16} className="shrink-0" /> {t('field.sl_duration')}
                                         </label>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-medium text-teal-600 dark:text-teal-400">{t('field.sl_custom')}</span>
+                                        <div className="flex shrink-0 items-center gap-2">
+                                            <span className="text-xs font-medium text-teal-600 dark:text-teal-400 whitespace-nowrap">{t('field.sl_custom')}</span>
                                             <div className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-colors ${useCustomTheta ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={() => setUseCustomTheta(!useCustomTheta)}>
                                                 <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${useCustomTheta ? 'translate-x-4' : ''}`} />
                                             </div>

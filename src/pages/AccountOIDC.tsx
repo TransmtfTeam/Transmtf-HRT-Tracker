@@ -173,9 +173,9 @@ const AccountOIDC: React.FC = () => {
               </div>
 
               {status.oidc_email && (
-                <div className="flex items-center justify-between text-sm">
-                  <span style={{ color: 'var(--text-secondary)' }}>{t('oidc.email') || 'Email'}:</span>
-                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{status.oidc_email}</span>
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="shrink-0" style={{ color: 'var(--text-secondary)' }}>{t('oidc.email') || 'Email'}:</span>
+                  <span className="font-medium break-all text-right" style={{ color: 'var(--text-primary)' }}>{status.oidc_email}</span>
                 </div>
               )}
               {status.provider && (

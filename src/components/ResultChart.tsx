@@ -764,29 +764,33 @@ const ResultChart = ({ sim, events, labResults = [], simCI, baselineE2PGmL, nowH
 
     return (
         <div className="glass-card rounded-2xl relative overflow-hidden flex flex-col">
-            <div className="flex justify-between items-center px-4 md:px-6 py-3 md:py-4 border-b border-[var(--border-secondary)]">
-                <h2 className="text-sm md:text-base font-semibold tracking-tight flex items-center gap-2" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif', color: 'var(--text-primary)' }}>
-                    <span className="inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl bg-pink-50 dark:bg-pink-950/30 border border-pink-100 dark:border-pink-800/30">
+            {/* Title and zoom controls share one row while they fit; on
+                narrow phones (and in longer locales) the controls wrap onto
+                a second row instead of squeezing the title and the
+                personal-model badge into mid-word line breaks. */}
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 md:px-6 py-3 md:py-4 border-b border-[var(--border-secondary)]">
+                <h2 className="min-w-0 text-sm md:text-base font-semibold tracking-tight flex items-center gap-2 whitespace-nowrap" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif', color: 'var(--text-primary)' }}>
+                    <span className="shrink-0 inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl bg-pink-50 dark:bg-pink-950/30 border border-pink-100 dark:border-pink-800/30">
                         <Activity size={16} className="text-[#f6c4d7] md:w-5 md:h-5" />
                     </span>
-                    {t('chart.title')}
+                    <span className="truncate">{t('chart.title')}</span>
                     {hasPersonalModel && (
-                        <span className="ml-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-500 border border-rose-100">
+                        <span className="shrink-0 ml-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-500 border border-rose-100">
                             {t('chart.personal_model')}
                         </span>
                     )}
                 </h2>
 
-                <div className="flex items-center gap-2">
+                <div className="ml-auto flex shrink-0 items-center gap-2">
                     <div className="flex bg-[var(--bg-secondary)] rounded-xl p-1 gap-1 border border-[var(--border-primary)]">
                         <button
                             onClick={() => zoomToDuration(30)}
-                            className="px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg hover:bg-[var(--bg-card)] transition-all" style={{ color: 'var(--text-secondary)' }}>
+                            className="px-2.5 md:px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg hover:bg-[var(--bg-card)] transition-all" style={{ color: 'var(--text-secondary)' }}>
                             1M
                         </button>
                         <button
                             onClick={() => zoomToDuration(7)}
-                            className="px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg hover:bg-[var(--bg-card)] transition-all" style={{ color: 'var(--text-secondary)' }}>
+                            className="px-2.5 md:px-3 py-1.5 text-xs md:text-sm font-bold rounded-lg hover:bg-[var(--bg-card)] transition-all" style={{ color: 'var(--text-secondary)' }}>
                             1W
                         </button>
                         <div className="w-px h-4 self-center mx-1" style={{ background: 'var(--border-primary)' }}></div>

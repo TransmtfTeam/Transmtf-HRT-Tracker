@@ -28,15 +28,18 @@ const HistoryView: React.FC<HistoryViewProps> = ({ events, onAddEvent, onEditEve
   return (
     <div className="relative space-y-5 pt-6 pb-16">
       <div className="px-4">
-        <div className="w-full p-4 rounded-2xl glass-card glass-highlight relative overflow-hidden flex items-center justify-between">
-          <h2 className="text-xl font-semibold tracking-tight flex items-center gap-3"
+        {/* Title and actions share a row while they fit; on narrow phones
+            the action buttons wrap below the title rather than breaking
+            their labels mid-word. */}
+        <div className="w-full p-4 rounded-2xl glass-card glass-highlight relative overflow-hidden flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
+          <h2 className="text-xl font-semibold tracking-tight flex items-center gap-3 whitespace-nowrap"
             style={{ color: 'var(--text-primary)' }}>
-            <Activity size={22} style={{ color: 'var(--accent-300)' }} /> {t('timeline.title')}
+            <Activity size={22} className="shrink-0" style={{ color: 'var(--accent-300)' }} /> {t('timeline.title')}
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <button
               onClick={onBatchAdd}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 h-11 rounded-xl text-sm font-bold btn-press-glass transition"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 h-11 rounded-xl text-sm font-bold whitespace-nowrap btn-press-glass transition"
               style={{ background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}
             >
               <Layers size={15} />
@@ -44,7 +47,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ events, onAddEvent, onEditEve
             </button>
             <button
               onClick={onAddEvent}
-              className="inline-flex md:hidden items-center justify-center gap-2 px-3.5 py-2 h-11 rounded-xl text-white text-sm font-bold btn-press-glass transition glass-btn-primary"
+              className="inline-flex md:hidden items-center justify-center gap-2 px-3.5 py-2 h-11 rounded-xl text-white text-sm font-bold whitespace-nowrap btn-press-glass transition glass-btn-primary"
             >
               <Plus size={16} />
               <span>{t('btn.add')}</span>

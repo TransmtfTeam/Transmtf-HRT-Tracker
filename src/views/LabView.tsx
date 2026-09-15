@@ -301,15 +301,17 @@ const LabView: React.FC<LabViewProps> = ({
   return (
     <div className="relative space-y-5 pt-6 pb-8">
       <div className="px-4">
-        <div className="w-full p-4 glass-card flex items-center justify-between">
-          <h2 className="text-xl font-semibold tracking-tight flex items-center gap-3"
+        {/* Title and action share a row while they fit; on narrow phones the
+            button wraps below the title rather than breaking mid-word. */}
+        <div className="w-full p-4 glass-card flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
+          <h2 className="text-xl font-semibold tracking-tight flex items-center gap-3 whitespace-nowrap"
             style={{ color: 'var(--text-primary)' }}>
-            <FlaskConical size={22} className="text-teal-500" /> {t('lab.title')}
+            <FlaskConical size={22} className="shrink-0 text-teal-500" /> {t('lab.title')}
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-3">
             <button
               onClick={onAddLabResult}
-              className="inline-flex items-center justify-center gap-2 px-3.5 py-2 h-11 rounded-xl text-white text-sm font-bold btn-press-glass transition glass-btn-primary"
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2 h-11 rounded-xl text-white text-sm font-bold whitespace-nowrap btn-press-glass transition glass-btn-primary"
             >
               <Plus size={16} />
               <span>{t('lab.add_title')}</span>

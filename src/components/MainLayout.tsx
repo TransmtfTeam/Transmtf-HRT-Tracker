@@ -164,21 +164,29 @@ const MainLayout: React.FC = () => {
         <div className="h-screen w-full overflow-x-hidden flex flex-col select-none font-sans"
             style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', overscrollBehaviorX: 'none' }}>
 
-            {/* ── Desktop top bar ── */}
-            <header className="hidden md:flex shrink-0 items-center justify-between px-6 h-16 sticky top-0 z-20 glass"
+            {/* ── Desktop top bar ──
+                Three width tiers so the bar never overflows (the layout clips
+                horizontally, so an overflowing bar silently loses the add
+                button and avatar):
+                  md  (tablet portrait): logo only, compact nav, no clock
+                  lg  (tablet landscape / small laptop): full-size nav, side
+                      blocks get equal minimum widths so the nav sits centred
+                  xl  (desktop): + brand name and clock
+                English is the widest locale and sets these thresholds. */}
+            <header className="hidden md:flex shrink-0 items-center justify-between gap-3 px-4 lg:px-6 h-16 sticky top-0 z-20 glass"
                 style={{
                     boxShadow: 'var(--shadow-sm)',
                 }}
             >
-                <div className="flex items-center gap-3 min-w-[220px]">
+                <div className="flex shrink-0 items-center gap-3 lg:min-w-[160px] xl:min-w-[220px]">
                     <div className="h-9 w-9 rounded-xl border overflow-hidden"
                         style={{ borderColor: 'var(--border-primary)' }}>
                         <img src="/favicon.ico" alt="logo" className="h-full w-full object-cover" />
                     </div>
-                    <p className="text-sm font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Transmtf HRT Tracker</p>
+                    <p className="hidden xl:block text-sm font-black tracking-tight whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>Transmtf HRT Tracker</p>
                 </div>
 
-                <nav aria-label={t('nav.aria_primary')} className="flex items-center gap-1">
+                <nav aria-label={t('nav.aria_primary')} className="flex shrink-0 items-center gap-1">
                     {navItems.map(({ id, label, icon: Icon }) => {
                         const active = currentView === id;
                         return (
@@ -186,7 +194,7 @@ const MainLayout: React.FC = () => {
                                 key={id}
                                 onClick={() => handleViewChange(id)}
                                 aria-current={active ? 'page' : undefined}
-                                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold btn-press-glass transition-all duration-200 ${
+                                className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold whitespace-nowrap btn-press-glass transition-all duration-200 ${
                                     active
                                         ? 'glass-btn-primary text-white'
                                         : 'glass-btn hover:bg-[var(--glass-bg-default)]'
@@ -195,34 +203,40 @@ const MainLayout: React.FC = () => {
                                     color: 'var(--text-secondary)',
                                 }}
                             >
-                                <Icon size={15} />
+                                <Icon size={15} className="shrink-0" />
                                 <span>{label}</span>
                             </button>
                         );
                     })}
                 </nav>
 
-                <div className="flex items-center gap-3 min-w-[260px] justify-end">
+                <div className="flex shrink-0 items-center gap-2 lg:gap-3 lg:min-w-[160px] xl:min-w-[260px] justify-end">
                     {/* F07: explicit PK computation status — a long history recomputes
-                        in a worker; without any indicator old values look final. */}
-                    {isComputing && (
-                        <span className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
-                            style={{ color: 'var(--accent-500)', border: '1px solid var(--accent-200)', background: 'var(--accent-50)' }}>
+                        in a worker; without any indicator old values look final.
+                        The pill takes the clock's slot while computing so the
+                        bar keeps its width; below xl (no clock) it collapses to
+                        the bare pulsing dot. */}
+                    {isComputing ? (
+                        <span className="flex items-center gap-1.5 rounded-full xl:border xl:border-[var(--accent-200)] xl:bg-[var(--accent-50)] xl:px-3 xl:py-1.5 text-xs font-semibold whitespace-nowrap"
+                            style={{ color: 'var(--accent-500)' }}
+                            title={t('common.computing') || '计算中…'}>
                             <span className="inline-block h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--accent-500)' }} aria-hidden="true" />
-                            {t('common.computing') || '计算中…'}
+                            <span className="hidden xl:inline">{t('common.computing') || '计算中…'}</span>
+                            <span className="sr-only xl:hidden">{t('common.computing') || '计算中…'}</span>
                         </span>
+                    ) : (
+                        <div className="hidden xl:flex items-center gap-2 rounded-full glass-subtle px-3 py-1.5 text-xs font-semibold whitespace-nowrap"
+                            style={{
+                                color: 'var(--text-secondary)',
+                            }}>
+                            <span>{formatDate(currentTime, lang)}</span>
+                            <span style={{ color: 'var(--accent-300)' }}>·</span>
+                            <span className="font-mono">{formatTime(currentTime)}</span>
+                        </div>
                     )}
-                    <div className="flex items-center gap-2 rounded-full glass-subtle px-3 py-1.5 text-xs font-semibold"
-                        style={{
-                            color: 'var(--text-secondary)',
-                        }}>
-                        <span>{formatDate(currentTime, lang)}</span>
-                        <span style={{ color: 'var(--accent-300)' }}>·</span>
-                        <span className="font-mono">{formatTime(currentTime)}</span>
-                    </div>
                     <button
                         onClick={handleAddEvent}
-                        className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold text-white glass-btn-primary btn-press-glass transition"
+                        className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold text-white whitespace-nowrap glass-btn-primary btn-press-glass transition"
                     >
                         <Plus size={15} />
                         <span>{t('btn.add')}</span>

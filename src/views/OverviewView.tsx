@@ -418,25 +418,34 @@ const OverviewView: React.FC<OverviewViewProps> = ({
   return (
     <>
       <header className="relative overflow-x-hidden px-3 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4">
-        <div className="grid md:grid-cols-3 gap-2.5 md:gap-4 md:items-stretch">
+        {/* Hero + side cards. Phones stack everything; tablets (md) keep the
+            hero full-width and lay the three side cards out in one row;
+            from lg the side cards move into a right-hand column that
+            matches the hero's height. */}
+        <div className="grid lg:grid-cols-3 gap-2.5 md:gap-4 lg:items-stretch">
           {/* Main level card */}
-          <div className="md:col-span-2 glass-card glass-highlight glass-accent rounded-2xl px-4 md:px-5 py-4 md:py-5 relative overflow-hidden"
+          <div className="lg:col-span-2 glass-card glass-highlight glass-accent rounded-2xl px-4 md:px-5 py-4 md:py-5 relative overflow-hidden"
             style={{
               background: isDark
                 ? `linear-gradient(135deg, rgba(${hexToRgb(colors[500])},0.12), var(--bg-card))`
                 : `linear-gradient(135deg, rgba(${hexToRgb(colors[500])},0.06), var(--bg-card))`,
             }}>
-            <div className="flex items-start justify-between gap-2 mb-3">
-              <h1 className="inline-flex min-w-0 flex-wrap items-center gap-2 whitespace-nowrap px-3 py-1 rounded-full text-[11px] md:text-xs font-semibold border"
+            <div className="flex items-start justify-between gap-1.5 mb-3">
+              {/* The pill stays a single line: the badge never wraps under
+                  the label, and the label ellipsises only when even an
+                  icon-only add button leaves too little room. The icon is
+                  the first thing to go — below 390px the English label plus
+                  badge only fits without it. */}
+              <h1 className="inline-flex min-w-0 items-center gap-2 whitespace-nowrap px-2.5 md:px-3 py-1 rounded-full text-[11px] md:text-xs font-semibold border"
                 style={{
                   background: 'var(--bg-card)',
                   color: 'var(--text-secondary)',
                   borderColor: 'var(--border-primary)',
                 }}>
-                <Activity size={14} style={{ color: 'var(--text-tertiary)' }} />
-                {t('status.estimate')}
+                <Activity size={14} className="hidden min-[390px]:block shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+                <span className="truncate">{t('status.estimate')}</span>
                 {hasPersonalModel && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
                     style={{
                       background: 'var(--accent-50)',
                       color: 'var(--accent-500)',
@@ -454,8 +463,10 @@ const OverviewView: React.FC<OverviewViewProps> = ({
               >
                 <Plus size={15} aria-hidden="true" />
                 {/* The personal-model badge competes for this row; keep the button
-                    icon-only on narrower screens when that badge is present. */}
-                <span className={`hidden ${hasPersonalModel ? 'min-[430px]:inline' : 'min-[360px]:inline'}`}>{t('btn.add')}</span>
+                    icon-only while the pill would not fit beside the labelled
+                    button in every locale (English is the widest: the pill with
+                    badge needs ~270px, the labelled button ~110px). */}
+                <span className={`hidden ${hasPersonalModel ? 'min-[450px]:inline' : 'min-[360px]:inline'}`}>{t('btn.add')}</span>
               </button>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -484,10 +495,10 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                   )}
                 </div>
                 {currentCI && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wide"
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap"
                       style={{ color: 'var(--accent-300)' }}>95% CI</span>
-                    <span className="text-[11px] font-semibold"
+                    <span className="text-[11px] font-semibold whitespace-nowrap"
                       style={{ color: 'var(--accent-400)' }}>
                       {currentCI.lo.toFixed(0)} – {currentCI.hi.toFixed(0)}
                       <span className="text-[9px] font-normal ml-0.5" style={{ color: 'var(--accent-300)' }}>pg/mL</span>
@@ -495,10 +506,10 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                   </div>
                 )}
                 {currentCI68 && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wide"
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap"
                       style={{ color: 'var(--accent-300)' }}>{t('chart.ci68_band')}</span>
-                    <span className="text-[11px] font-semibold"
+                    <span className="text-[11px] font-semibold whitespace-nowrap"
                       style={{ color: 'var(--accent-400)' }}>
                       {currentCI68.lo.toFixed(0)} – {currentCI68.hi.toFixed(0)}
                       <span className="text-[9px] font-normal ml-0.5" style={{ color: 'var(--accent-300)' }}>pg/mL</span>
@@ -506,36 +517,36 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                   </div>
                 )}
                 {personalLevel !== null && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wide"
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap"
                       style={{ color: 'var(--accent-300)' }}>
                       {t('chart.personal_model')}
                     </span>
-                    <span className="text-[10px] font-semibold" style={{ color: 'var(--accent-500)' }}>
+                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: 'var(--accent-500)' }}>
                       {personalLevel.capped && '≥ '}{personalLevel.value.toFixed(1)} pg/mL
                     </span>
                   </div>
                 )}
                 {hasPersonalModel && rawLevel > 0 && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Raw</span>
-                    <span className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap" style={{ color: 'var(--text-tertiary)' }}>Raw</span>
+                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                       {rawLevel.toFixed(1)} pg/mL
                     </span>
                   </div>
                 )}
                 {!hasDoseHistory && baselineLevel !== null && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold text-teal-400 uppercase tracking-wide">Baseline</span>
-                    <span className="text-[10px] font-semibold text-teal-500">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                    <span className="text-[9px] font-bold text-teal-400 uppercase tracking-wide whitespace-nowrap">Baseline</span>
+                    <span className="text-[10px] font-semibold text-teal-500 whitespace-nowrap">
                       {baselineLevel.toFixed(1)} pg/mL
                     </span>
                   </div>
                 )}
                 {hasDoseHistory && !hasPersonalModel && baselineE2PGmL != null && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[9px] font-bold text-teal-400 uppercase tracking-wide">Endogenous</span>
-                    <span className="text-[10px] font-semibold text-teal-500">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                    <span className="text-[9px] font-bold text-teal-400 uppercase tracking-wide whitespace-nowrap">Endogenous</span>
+                    <span className="text-[10px] font-semibold text-teal-500 whitespace-nowrap">
                       {baselineE2PGmL.toFixed(1)} pg/mL
                     </span>
                   </div>
@@ -593,10 +604,10 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                 {hasPersonalAaModel && currentAA > 0 && (
                   <>
                     {currentAACI && (
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[9px] font-bold uppercase tracking-wide"
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap"
                           style={{ color: aaColor, opacity: 0.8 }}>{t('chart.cpa_pop_range')}</span>
-                        <span className="text-[11px] font-semibold"
+                        <span className="text-[11px] font-semibold whitespace-nowrap"
                           style={{ color: aaColor }}>
                           {fmtText(currentAACI.lo)} – {fmtText(currentAACI.hi)}
                           <span className="text-[9px] font-normal ml-0.5"
@@ -605,13 +616,13 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                       </div>
                     )}
                     {primaryAASpec?.adherenceFromE2 && (
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[9px] font-bold uppercase tracking-wide"
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap"
                           style={{ color: aaColor, opacity: 0.8 }}>
                           {t('chart.cpa_adherence')}
                         </span>
                         {personalAA !== null && (
-                          <span className="text-[10px] font-semibold"
+                          <span className="text-[10px] font-semibold whitespace-nowrap"
                             style={{ color: aaColor }}>
                             {fmtText(personalAA)} {fmt(personalAA).unit}
                           </span>
@@ -619,9 +630,9 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                       </div>
                     )}
                     {rawAA > 0 && rawAA !== personalAA && (
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Base</span>
-                        <span className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 mt-0.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap" style={{ color: 'var(--text-tertiary)' }}>Base</span>
+                        <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                           {fmtText(rawAA)} {fmt(rawAA).unit}
                         </span>
                       </div>
@@ -640,10 +651,13 @@ const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
 
           {/* Side cards */}
-          <div className="flex flex-col gap-3 md:h-full">
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-4 lg:flex lg:gap-3 lg:h-full">
 
-            {/* Row 1: total dose count + last CPA (compact, paired) */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Row 1: total dose count + last CPA (compact, paired). On
+                tablets the wrapper dissolves (display: contents) so both
+                tiles join the three-column row; the lg side column is too
+                narrow for two tiles abreast, so they stack until xl. */}
+            <div className="grid grid-cols-2 gap-3 md:contents lg:grid lg:grid-cols-1 xl:grid-cols-2">
 
               {/* Total dose count */}
               <div className="flex items-center gap-2 p-3 md:p-4 glass-card card-lift-glass min-w-0">
@@ -652,7 +666,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                   <Activity size={16} style={{ color: 'var(--accent-500)' }} />
                 </div>
                 <div className="leading-tight min-w-0 flex-1">
-                  <p className="text-[10px] md:text-xs font-semibold truncate" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-[10px] md:text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
                     {t('overview.total_doses')}
                   </p>
                   <p className="text-lg md:text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -668,7 +682,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({
                   <Pill size={16} style={{ color: '#3b82f6' }} />
                 </div>
                 <div className="leading-tight min-w-0 flex-1">
-                  <p className="text-[10px] md:text-xs font-semibold truncate" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-[10px] md:text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
                     {t('overview.last_antiandrogen')}
                   </p>
                   {lastAntiandrogenDose ? (
