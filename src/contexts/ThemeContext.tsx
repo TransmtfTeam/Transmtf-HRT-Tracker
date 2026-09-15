@@ -76,8 +76,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
     const savedMode = localStorage.getItem(THEME_MODE_KEY);
     if (isThemeMode(savedMode)) return savedMode;
-    const legacyDark = localStorage.getItem('hrt-dark-mode');
-    return legacyDark === '1' || legacyDark === 'true' ? 'dark' : 'light';
+    return 'system';
   });
   const [systemIsDark, setSystemIsDark] = useState(() =>
     window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -129,13 +128,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => media.removeEventListener('change', handleChange);
   }, []);
 
-  // Mirror the derived boolean into the legacy key for older clients. This runs
-  // on every isDark change - including a system-theme flip under 'system' mode -
-  // and deliberately touches no timestamp: nothing the user did has changed.
-  useEffect(() => {
-    localStorage.setItem('hrt-dark-mode', isDark ? '1' : '0');
-  }, [isDark]);
-
   // Persist & notify cloud sync (skip on initial mount and external updates)
   useEffect(() => {
     if (isInitialTheme.current) {
@@ -160,13 +152,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const wasExternal = externalModeValue.current === themeMode;
     externalModeValue.current = null;
     if (wasExternal) return;
-    const now = new Date().toISOString();
-    localStorage.setItem('hrt-last-modified', now);
-    localStorage.setItem('hrt-last-data-updated', now);
-    window.dispatchEvent(new CustomEvent('hrt-local-data-updated', { detail: { key: THEME_MODE_KEY } }));
   }, [themeMode]);
 
-  // Listen for storage changes (cross-tab / cloud sync)
+  // Listen for cross-tab updates. Theme color can also arrive through cloud sync.
   useEffect(() => {
     const handler = (e: StorageEvent) => {
       if (e.key === 'hrt-theme-color' && e.newValue && e.newValue in THEME_PRESETS) {
@@ -176,12 +164,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (e.key === THEME_MODE_KEY && isThemeMode(e.newValue)) {
         externalModeValue.current = e.newValue;
         setThemeModeState(e.newValue);
-      } else if (e.key === 'hrt-dark-mode' && !localStorage.getItem(THEME_MODE_KEY)) {
-        // Only honoured while this device has no explicit mode of its own: an
-        // older client's boolean must not override a mode the user picked here.
-        const next: ThemeMode = e.newValue === '1' || e.newValue === 'true' ? 'dark' : 'light';
-        externalModeValue.current = next;
-        setThemeModeState(next);
       }
     };
     window.addEventListener('storage', handler);

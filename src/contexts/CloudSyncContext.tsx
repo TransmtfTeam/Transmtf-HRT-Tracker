@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import apiClient from '../api/client';
 import { useAuth } from './AuthContext';
 import { useSecurityPassword } from './SecurityPasswordContext';
-import { computeDataHash, projectForSync, resolveThemeMode, SYNC_HASH_SCHEMA } from '../utils/dataHash';
+import { computeDataHash, projectForSync, SYNC_HASH_SCHEMA } from '../utils/dataHash';
 import { classifyChanges } from '../utils/syncDecision';
 import { DEFAULT_WEIGHT_KG } from '../utils/weight';
 import { isLogoutInProgress } from '../utils/authSessionState';
@@ -56,7 +56,7 @@ function deepEqual(a: any, b: any): boolean {
 const SYNC_FIELDS = [
   'events', 'weight', 'labResults', 'lang',
   'calibrationModel', 'calibrationMode', 'applyE2LearningToCPA',
-  'applyCPAInhibitionToE2', 'themeColor', 'themeMode',
+  'applyCPAInhibitionToE2', 'themeColor',
   'gelProducts',
 ] as const;
 
@@ -138,8 +138,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const applyE2Raw = localStorage.getItem('hrt-apply-e2-learning-to-cpa');
     const applyCPARaw = localStorage.getItem('hrt-apply-cpa-inhibition-to-e2');
     const themeColor = localStorage.getItem('hrt-theme-color') || 'sakura';
-    const savedThemeMode = localStorage.getItem('hrt-theme-mode');
-    const darkModeRaw = localStorage.getItem('hrt-dark-mode');
     const gelProductsRaw = localStorage.getItem('hrt-gel-products');
 
     const storedLastModified = localStorage.getItem('hrt-last-modified');
@@ -165,8 +163,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const resolvedLang = lang || 'en';
     const applyE2LearningToCPA = applyE2Raw === '1' || applyE2Raw?.toLowerCase() === 'true';
     const applyCPAInhibitionToE2 = applyCPARaw === '1' || applyCPARaw?.toLowerCase() === 'true';
-    const darkMode = darkModeRaw === '1' || darkModeRaw === 'true';
-    const themeMode = resolveThemeMode({ themeMode: savedThemeMode ?? undefined, darkMode });
     const gelProducts = safeParseArray(gelProductsRaw);
     const dataHash = computeDataHash({
       events: parsedEvents,
@@ -178,8 +174,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       applyE2LearningToCPA,
       applyCPAInhibitionToE2,
       themeColor,
-      themeMode,
-      darkMode,
       gelProducts,
     });
     localStorage.setItem('hrt-data-hash', dataHash);
@@ -194,8 +188,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       applyE2LearningToCPA,
       applyCPAInhibitionToE2,
       themeColor,
-      themeMode,
-      darkMode,
       gelProducts,
       lastModified: storedLastModified,
       lastDataUpdated: storedLastDataUpdated,
@@ -214,8 +206,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     applyE2LearningToCPA?: boolean;
     applyCPAInhibitionToE2?: boolean;
     themeColor?: string;
-    themeMode?: string;
-    darkMode?: boolean;
     gelProducts?: any[];
     lastModified: string;
     lastDataUpdated?: string | null;
@@ -249,8 +239,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         applyE2LearningToCPA: localData.applyE2LearningToCPA,
         applyCPAInhibitionToE2: localData.applyCPAInhibitionToE2,
         themeColor: localData.themeColor,
-        themeMode: localData.themeMode,
-        darkMode: localData.darkMode,
         gelProducts: localData.gelProducts,
       });
       setLastSyncTime(now);
@@ -309,27 +297,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (data?.applyE2LearningToCPA !== undefined) localStorage.setItem('hrt-apply-e2-learning-to-cpa', data.applyE2LearningToCPA ? '1' : '0');
     if (data?.applyCPAInhibitionToE2 !== undefined) localStorage.setItem('hrt-apply-cpa-inhibition-to-e2', data.applyCPAInhibitionToE2 ? '1' : '0');
     if (data?.themeColor) localStorage.setItem('hrt-theme-color', data.themeColor);
-    // Resolve once so the value written to storage and the value folded into
-    // the baseline hash below can never disagree.
-    const resolvedThemeMode = data?.themeMode !== undefined || data?.darkMode !== undefined
-      ? resolveThemeMode({ themeMode: data?.themeMode, darkMode: data?.darkMode })
-      : localData.themeMode;
-    if (resolvedThemeMode) localStorage.setItem('hrt-theme-mode', resolvedThemeMode);
-    // The legacy flag is a mirror of the mode, never an independent field: a
-    // conflict merge takes the mode from whichever side the user picked while
-    // darkMode still rides along from the cloud copy, and the pair would be
-    // pushed back out contradicting each other. Derive it here rather than
-    // waiting for ThemeProvider - resolveConflict snapshots and uploads before
-    // React can re-render, and since darkMode no longer feeds the hash, a
-    // correction made afterwards would never be pushed. 'system' has no
-    // device-independent answer, so record what this device actually shows,
-    // which is what ThemeProvider will settle on a moment later.
-    if (resolvedThemeMode) {
-      const mirrorsDark = resolvedThemeMode === 'system'
-        ? window.matchMedia('(prefers-color-scheme: dark)').matches
-        : resolvedThemeMode === 'dark';
-      localStorage.setItem('hrt-dark-mode', mirrorsDark ? '1' : '0');
-    }
     if (data?.gelProducts !== undefined) localStorage.setItem('hrt-gel-products', JSON.stringify(data.gelProducts));
     if (data?.lastModified || fallbackTimestamp) localStorage.setItem('hrt-last-modified', data?.lastModified || fallbackTimestamp || '');
     if (data?.lastDataUpdated || fallbackTimestamp) localStorage.setItem(LAST_DATA_UPDATED_KEY, data?.lastDataUpdated || fallbackTimestamp || '');
@@ -343,8 +310,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       applyE2LearningToCPA: data?.applyE2LearningToCPA ?? localData.applyE2LearningToCPA,
       applyCPAInhibitionToE2: data?.applyCPAInhibitionToE2 ?? localData.applyCPAInhibitionToE2,
       themeColor: data?.themeColor || localData.themeColor,
-      themeMode: resolvedThemeMode,
-      darkMode: data?.darkMode ?? localData.darkMode,
       gelProducts: data?.gelProducts ?? localData.gelProducts,
     });
     localStorage.setItem('hrt-data-hash', dataHash);
@@ -373,8 +338,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     localStorage.setItem('hrt-apply-e2-learning-to-cpa', snapshot.applyE2LearningToCPA ? '1' : '0');
     localStorage.setItem('hrt-apply-cpa-inhibition-to-e2', snapshot.applyCPAInhibitionToE2 ? '1' : '0');
     localStorage.setItem('hrt-theme-color', snapshot.themeColor);
-    localStorage.setItem('hrt-theme-mode', snapshot.themeMode);
-    localStorage.setItem('hrt-dark-mode', snapshot.darkMode ? '1' : '0');
     localStorage.setItem('hrt-gel-products', JSON.stringify(snapshot.gelProducts ?? []));
     // Final-review follow-up: restore must also REMOVE keys the pre-apply
     // snapshot lacked — otherwise a failed cloud/merge resolution leaves the
@@ -468,10 +431,6 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         applyE2LearningToCPA: cloudData.applyE2LearningToCPA ?? localData.applyE2LearningToCPA,
         applyCPAInhibitionToE2: cloudData.applyCPAInhibitionToE2 ?? localData.applyCPAInhibitionToE2,
         themeColor: cloudData.themeColor || localData.themeColor,
-        themeMode: cloudData.themeMode !== undefined || cloudData.darkMode !== undefined
-          ? resolveThemeMode({ themeMode: cloudData.themeMode, darkMode: cloudData.darkMode })
-          : localData.themeMode,
-        darkMode: cloudData.darkMode ?? localData.darkMode,
         gelProducts: cloudData.gelProducts || [],
       });
 
@@ -744,7 +703,7 @@ export const CloudSyncProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.storageArea !== localStorage) return;
-      const syncKeys = ['hrt-events', 'hrt-weight', 'hrt-lab-results', 'hrt-lang', 'hrt-calibration-model', 'hrt-calibration-mode', 'hrt-apply-e2-learning-to-cpa', 'hrt-apply-cpa-inhibition-to-e2', 'hrt-theme-color', 'hrt-theme-mode', 'hrt-dark-mode', 'hrt-gel-products'];
+      const syncKeys = ['hrt-events', 'hrt-weight', 'hrt-lab-results', 'hrt-lang', 'hrt-calibration-model', 'hrt-calibration-mode', 'hrt-apply-e2-learning-to-cpa', 'hrt-apply-cpa-inhibition-to-e2', 'hrt-theme-color', 'hrt-gel-products'];
       if (e.key && syncKeys.includes(e.key)) performSync();
     };
 

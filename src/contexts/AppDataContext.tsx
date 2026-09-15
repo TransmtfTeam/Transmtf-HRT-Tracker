@@ -16,8 +16,6 @@ const CALIBRATION_MODEL_KEY = 'hrt-calibration-model';
 const CALIBRATION_MODE_KEY = 'hrt-calibration-mode';
 const APPLY_CPA_INHIBITION_TO_E2_KEY = 'hrt-apply-cpa-inhibition-to-e2';
 const THEME_COLOR_KEY = 'hrt-theme-color';
-const DARK_MODE_KEY = 'hrt-dark-mode';
-const THEME_MODE_KEY = 'hrt-theme-mode';
 const WEIGHT_MIGRATION_FLAG = 'hrt-weight-per-dose-migrated';
 const LEGACY_WEIGHT_KEY = 'hrt-weight';
 
@@ -277,12 +275,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     useEffect(() => {
         const lang = localStorage.getItem('hrt-lang') || 'en';
         const themeColor = localStorage.getItem('hrt-theme-color') || 'sakura';
-        const darkModeRaw = localStorage.getItem('hrt-dark-mode');
-        const darkMode = darkModeRaw === '1' || darkModeRaw === 'true';
-        const themeMode = localStorage.getItem(THEME_MODE_KEY) || (darkMode ? 'dark' : 'light');
         const gelProductsRaw = localStorage.getItem(GEL_PRODUCTS_KEY);
         const gelProductsParsed = gelProductsRaw ? JSON.parse(gelProductsRaw) : [];
-        const hash = computeDataHash({ events, weight: latestEventWeight(events), labResults, lang, calibrationModel, calibrationMode, applyE2LearningToCPA, applyCPAInhibitionToE2, themeColor, themeMode, darkMode, gelProducts: gelProductsParsed });
+        const hash = computeDataHash({ events, weight: latestEventWeight(events), labResults, lang, calibrationModel, calibrationMode, applyE2LearningToCPA, applyCPAInhibitionToE2, themeColor, gelProducts: gelProductsParsed });
         localStorage.setItem('hrt-data-hash', hash);
     }, [events, labResults, calibrationModel, calibrationMode, applyE2LearningToCPA, applyCPAInhibitionToE2, gelProducts]);
 
@@ -313,7 +308,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
-            const syncKeys = ['hrt-events', 'hrt-lab-results', 'hrt-calibration-model', CALIBRATION_MODE_KEY, APPLY_E2_LEARNING_TO_CPA_KEY, APPLY_CPA_INHIBITION_TO_E2_KEY, THEME_COLOR_KEY, THEME_MODE_KEY, DARK_MODE_KEY, GEL_PRODUCTS_KEY];
+            const syncKeys = ['hrt-events', 'hrt-lab-results', 'hrt-calibration-model', CALIBRATION_MODE_KEY, APPLY_E2_LEARNING_TO_CPA_KEY, APPLY_CPA_INHIBITION_TO_E2_KEY, THEME_COLOR_KEY, GEL_PRODUCTS_KEY];
             const isCloudSync = e.key === 'hrt-data-synced';
             const isOtherTabSync = e.storageArea === localStorage && e.key && syncKeys.includes(e.key);
             if (!isCloudSync && !isOtherTabSync) {
@@ -405,28 +400,12 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const savedCPA = localStorage.getItem(APPLY_CPA_INHIBITION_TO_E2_KEY);
                 if (savedCPA !== null) setApplyCPAInhibitionToE2(savedCPA === '1' || savedCPA.toLowerCase() === 'true');
 
-                // Notify ThemeContext about cloud-synced theme/dark mode changes
+                // Notify ThemeContext about cloud-synced theme color changes.
                 const savedTheme = localStorage.getItem(THEME_COLOR_KEY);
                 if (savedTheme) {
                     window.dispatchEvent(new StorageEvent('storage', {
                         key: THEME_COLOR_KEY,
                         newValue: savedTheme,
-                        storageArea: localStorage,
-                    }));
-                }
-                const savedDark = localStorage.getItem(DARK_MODE_KEY);
-                if (savedDark !== null) {
-                    window.dispatchEvent(new StorageEvent('storage', {
-                        key: DARK_MODE_KEY,
-                        newValue: savedDark,
-                        storageArea: localStorage,
-                    }));
-                }
-                const savedThemeMode = localStorage.getItem(THEME_MODE_KEY);
-                if (savedThemeMode) {
-                    window.dispatchEvent(new StorageEvent('storage', {
-                        key: THEME_MODE_KEY,
-                        newValue: savedThemeMode,
                         storageArea: localStorage,
                     }));
                 }
