@@ -204,6 +204,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Access token present — restore session immediately
       const storedDisplayName = getStoredValue(DISPLAY_NAME_STORAGE_KEY) || undefined;
       const storedAvatarUrl = getStoredValue(AVATAR_URL_STORAGE_KEY) || undefined;
+      // Cookie restoration is also a session boundary: local records may have
+      // been left by a different account since the last page load. Set the
+      // ownership guard before publishing the authenticated state so the sync
+      // provider cannot start a pull/push in the gap.
+      updateDataOwnershipFlag(storedUsername);
       setAccessToken(storedAccessToken);
       setUser({ username: storedUsername, displayName: storedDisplayName, avatarUrl: storedAvatarUrl });
       apiClient.setAccessToken(storedAccessToken);
@@ -222,6 +227,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { access_token, refresh_token } = response.data;
           const storedDisplayName = getStoredValue(DISPLAY_NAME_STORAGE_KEY) || undefined;
           const storedAvatarUrl = getStoredValue(AVATAR_URL_STORAGE_KEY) || undefined;
+          // Apply the same ownership guard before publishing a silently
+          // restored session as the access-token path above.
+          updateDataOwnershipFlag(storedUsername);
           setAccessToken(access_token);
           setUser({ username: storedUsername, displayName: storedDisplayName, avatarUrl: storedAvatarUrl });
           apiClient.setAccessToken(access_token);
