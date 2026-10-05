@@ -16,6 +16,9 @@ import LabResultModal from './LabResultModal';
 
 type ViewKey = 'home' | 'history' | 'lab' | 'settings' | 'profile';
 
+const MOBILE_HOME_LONG_PRESS_MS = 550;
+const MOBILE_HOME_LONG_PRESS_MOVE_PX = 10;
+
 const MainLayout: React.FC = () => {
     const { t, lang } = useTranslation();
     const { showDialog } = useDialog();
@@ -33,6 +36,9 @@ const MainLayout: React.FC = () => {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [avatarError, setAvatarError] = useState(false);
     const mainScrollRef = useRef<HTMLDivElement>(null);
+    const mobileHomeLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const mobileHomeLongPressStartRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+    const mobileHomeLongPressTriggeredRef = useRef(false);
 
     const currentView = useMemo<ViewKey | null>(() => {
         const { pathname } = location;
@@ -160,6 +166,49 @@ const MainLayout: React.FC = () => {
         setEvents(prev => [...prev, ...newEvents]);
     };
 
+    const cancelMobileHomeLongPress = () => {
+        if (mobileHomeLongPressTimerRef.current !== null) {
+            clearTimeout(mobileHomeLongPressTimerRef.current);
+            mobileHomeLongPressTimerRef.current = null;
+        }
+        mobileHomeLongPressStartRef.current = null;
+    };
+
+    const startMobileHomeLongPress = (event: React.PointerEvent<HTMLButtonElement>) => {
+        if (!event.isPrimary || currentView !== 'home') return;
+
+        cancelMobileHomeLongPress();
+        mobileHomeLongPressTriggeredRef.current = false;
+        mobileHomeLongPressStartRef.current = {
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+        };
+        mobileHomeLongPressTimerRef.current = setTimeout(() => {
+            mobileHomeLongPressTimerRef.current = null;
+            mobileHomeLongPressTriggeredRef.current = true;
+            handleAddEvent();
+        }, MOBILE_HOME_LONG_PRESS_MS);
+    };
+
+    const moveMobileHomeLongPress = (event: React.PointerEvent<HTMLButtonElement>) => {
+        const start = mobileHomeLongPressStartRef.current;
+        if (!start || start.pointerId !== event.pointerId) return;
+
+        if (
+            Math.abs(event.clientX - start.x) > MOBILE_HOME_LONG_PRESS_MOVE_PX ||
+            Math.abs(event.clientY - start.y) > MOBILE_HOME_LONG_PRESS_MOVE_PX
+        ) {
+            cancelMobileHomeLongPress();
+        }
+    };
+
+    useEffect(() => () => {
+        if (mobileHomeLongPressTimerRef.current !== null) {
+            clearTimeout(mobileHomeLongPressTimerRef.current);
+        }
+    }, []);
+
     return (
         <div className="h-screen w-full overflow-x-hidden flex flex-col select-none font-sans"
             style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', overscrollBehaviorX: 'none' }}>
@@ -286,7 +335,20 @@ const MainLayout: React.FC = () => {
                             return (
                                 <button
                                     key={id}
-                                    onClick={() => handleViewChange(id)}
+                                    onClick={(event) => {
+                                        if (id === 'home' && active && mobileHomeLongPressTriggeredRef.current) {
+                                            event.preventDefault();
+                                            mobileHomeLongPressTriggeredRef.current = false;
+                                            return;
+                                        }
+                                        handleViewChange(id);
+                                    }}
+                                    onPointerDown={id === 'home' && active ? startMobileHomeLongPress : undefined}
+                                    onPointerMove={id === 'home' && active ? moveMobileHomeLongPress : undefined}
+                                    onPointerUp={id === 'home' && active ? cancelMobileHomeLongPress : undefined}
+                                    onPointerCancel={id === 'home' && active ? cancelMobileHomeLongPress : undefined}
+                                    onPointerLeave={id === 'home' && active ? cancelMobileHomeLongPress : undefined}
+                                    onContextMenu={id === 'home' && active ? (event) => event.preventDefault() : undefined}
                                     aria-current={active ? 'page' : undefined}
                                     className={`relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-2xl transition-all duration-200 btn-press-glass ${
                                         active ? 'glass-btn' : ''
